@@ -147,3 +147,14 @@ describe("manual edits", () => {
     expect((await post({ kind: "delete", id: "x" })).status).toBe(400);
   });
 });
+
+describe("stats", () => {
+  it("returns stats for the range", async () => {
+    store.insert(ev(1, 9, "in"));
+    store.insert(ev(2, 18, "out"));
+    const res = await app.request("/api/stats?from=2026-10-01&to=2026-10-31", { headers: HOST });
+    const body = (await res.json()) as { current: { totalSec: number }; heat: number[][] };
+    expect(body.current.totalSec).toBe(9 * 3600);
+    expect(body.heat).toHaveLength(7);
+  });
+});

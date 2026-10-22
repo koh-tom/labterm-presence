@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { serveStatic } from "@hono/node-server/serve-static";
 import {
   buildRange,
+  buildStats,
   currentState,
   dayStart,
   isValidDate,
@@ -120,6 +121,21 @@ export function createApi(deps: Deps) {
       const q = parseRange(c.req.query());
       if (!q) return c.json({ error: "bad range" }, 400);
       return c.json(range(q.from, q.to));
+    })
+    .get("/stats", (c) => {
+      const q = parseRange(c.req.query());
+      if (!q) return c.json({ error: "bad range" }, 400);
+      const t = now();
+      return c.json(
+        buildStats(
+          deps.store.eventsUntil(t + 60),
+          deps.store.focusUntil(t + 60),
+          q.from,
+          q.to,
+          t,
+          deps.tz,
+        ),
+      );
     })
     .get("/presence/events", (c) => {
       const q = parseRange(c.req.query());
