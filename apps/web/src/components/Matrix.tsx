@@ -12,9 +12,8 @@ const KIND_LABEL: Record<Cell["kind"], string> = {
 };
 
 const Square = memo(function Square({ c, tz, flash }: { c: Cell; tz: string; flash: boolean }) {
-  const title = KIND_LABEL[c.kind]
-    ? `${clock(c.start, tz)}–${clock(c.end, tz)} ${KIND_LABEL[c.kind]}`
-    : undefined;
+  const label = c.focus ? "研究" : KIND_LABEL[c.kind];
+  const title = label ? `${clock(c.start, tz)}–${clock(c.end, tz)} ${label}` : undefined;
   return (
     <div
       role="gridcell"
@@ -22,7 +21,7 @@ const Square = memo(function Square({ c, tz, flash }: { c: Cell; tz: string; fla
       className={clsx(
         "cursor-pointer",
         "relative h-[18px] overflow-hidden rounded-[4px]",
-        c.kind === "in" && "bg-presence",
+        c.kind === "in" && (c.focus ? "bg-presence-deep" : "bg-presence"),
         (c.kind === "partial" || c.kind === "empty") && "bg-cell",
         c.kind === "away" && "bg-presence-soft",
         c.kind === "future" && "bg-cell/35",
@@ -61,7 +60,13 @@ export function Matrix({
       days.map((d) => ({
         date: d.date,
         total: d.summary.presenceSec,
-        cells: toCells(d.date, d.segments, { resolutionMin: resolution, hours, now, tz }),
+        cells: toCells(d.date, d.segments, {
+          resolutionMin: resolution,
+          hours,
+          now,
+          tz,
+          focus: d.focus,
+        }),
       })),
     [days, hours, resolution, now, tz],
   );

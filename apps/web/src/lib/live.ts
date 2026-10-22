@@ -5,7 +5,8 @@ import { DEMO } from "./api.ts";
 type Message =
   | { type: "device" }
   | { type: "sync" }
-  | { type: "presence"; eventId: string; at: number };
+  | { type: "presence"; eventId: string; at: number }
+  | { type: "focus"; at: number };
 
 // daemon からの通知 (SSE) で表示を更新する。新しいイベントの時刻を返す (マスを光らせる用)
 export function useLive(): number | null {
@@ -30,7 +31,9 @@ export function useLive(): number | null {
         clearTimeout(timer);
         timer = setTimeout(() => setFlashAt(null), 1500);
       }
-      if (msg.type === "sync") void qc.invalidateQueries({ queryKey: ["presence"] });
+      if (msg.type === "sync" || msg.type === "focus") {
+        void qc.invalidateQueries({ queryKey: ["presence"] });
+      }
     };
     // 再接続した時は取りこぼしがあるかもしれないので読み直す
     es.onopen = () => void qc.invalidateQueries();

@@ -22,6 +22,7 @@ function rand(seed: number) {
 }
 
 let cache: PresenceEvent[] | null = null;
+let focusCache: { start: number; end: number }[] = [];
 
 function events(now: number): PresenceEvent[] {
   if (cache) return cache;
@@ -60,6 +61,13 @@ function events(now: number): PresenceEvent[] {
     if (r() < (weekend ? 0.75 : 0.12)) continue;
     const arrive = ds + (8.3 + r() * 2.7) * 3600;
     push(arrive, "in");
+    // 研究タイマー (50分) を何回か
+    for (let k = 0; k < 4; k++) {
+      if (r() < 0.6) {
+        const s = arrive + (0.3 + k * 1.6 + r() * 0.5) * 3600;
+        focusCache.push({ start: s, end: s + 50 * 60 });
+      }
+    }
     if (r() < 0.7) {
       const lunch = ds + (11.8 + r() * 1.2) * 3600;
       push(lunch, "away");
@@ -79,7 +87,14 @@ function events(now: number): PresenceEvent[] {
 
 export function demoRange(from: string, to: string): PresenceRange {
   const now = Math.floor(Date.now() / 1000);
-  return buildRange(events(now), from, to, now, TZ);
+  return buildRange(
+    events(now),
+    from,
+    to,
+    now,
+    TZ,
+    focusCache.filter((f) => f.end <= now),
+  );
 }
 
 export function demoStatus(): Status {

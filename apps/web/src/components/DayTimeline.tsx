@@ -62,6 +62,14 @@ export function DayTimeline({
             />
           );
         })}
+        {/* 研究していた時間は在室の線の上に濃い色で重ねる */}
+        {day.focus.map((f) => (
+          <div
+            key={`${f.start}-f`}
+            className="absolute top-[4px] h-[7px] rounded-full bg-presence-deep"
+            style={{ left: pos(f.start), width: width(f.start, f.end) }}
+          />
+        ))}
         {day.segments.some((s) => s.end === null) && (
           <div
             className="now-pulse absolute top-[2px] size-[11px] -translate-x-1/2 rounded-full bg-presence ring-2 ring-bg"
