@@ -1,0 +1,92 @@
+@import "tailwindcss";
+@import "@fontsource-variable/noto-sans-jp";
+@import "@fontsource-variable/geist-mono";
+
+/* 色は在室の緑1色だけ。あとはモノクロ */
+:root {
+  --bg: oklch(0.985 0.002 250);
+  --fg: oklch(0.24 0.01 255);
+  --sub: oklch(0.52 0.012 255);
+  --faint: oklch(0.72 0.01 255);
+  --cell: oklch(0.935 0.004 255);
+  --line: oklch(0.91 0.004 255);
+  --presence: oklch(0.69 0.15 163);
+  --presence-soft: oklch(0.69 0.15 163 / 0.2);
+  --warn: oklch(0.75 0.15 75);
+  --danger: oklch(0.62 0.17 25);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: oklch(0.165 0.006 255);
+    --fg: oklch(0.93 0.005 255);
+    --sub: oklch(0.68 0.01 255);
+    --faint: oklch(0.5 0.01 255);
+    --cell: oklch(0.235 0.007 255);
+    --line: oklch(0.26 0.007 255);
+    --presence: oklch(0.74 0.15 163);
+    --presence-soft: oklch(0.74 0.15 163 / 0.22);
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-fg: var(--fg);
+  --color-sub: var(--sub);
+  --color-faint: var(--faint);
+  --color-cell: var(--cell);
+  --color-line: var(--line);
+  --color-presence: var(--presence);
+  --color-presence-soft: var(--presence-soft);
+  --color-warn: var(--warn);
+  --color-danger: var(--danger);
+  --font-sans: "Noto Sans JP Variable", system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes now-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes flash {
+  from {
+    box-shadow: 0 0 0 3px var(--presence);
+  }
+  to {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .now-pulse {
+    animation: now-pulse 2.4s ease-in-out infinite;
+  }
+  .flash {
+    animation: flash 1.2s ease-out;
+  }
+  .fade {
+    transition:
+      opacity 150ms,
+      background-color 150ms,
+      color 150ms;
+  }
+}
