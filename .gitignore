@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.db
+*.db-*
+.DS_Store
+coverage/
+test-results/
+playwright-report/
+
+# 要件定義などのメモ (git管理外)
+docs/
