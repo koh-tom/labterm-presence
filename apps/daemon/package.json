@@ -1,0 +1,35 @@
+{
+  "name": "@labterm/daemon",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "labterm": "./src/cli.ts"
+  },
+  "exports": {
+    "./app": "./src/app.ts"
+  },
+  "scripts": {
+    "dev": "node --watch src/main.ts",
+    "start": "node src/main.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@date-fns/tz": "^1.5.0",
+    "@hono/node-server": "^2.1.5",
+    "@labterm/core": "workspace:*",
+    "better-sqlite3": "^13.0.3",
+    "date-fns": "^4.4.0",
+    "drizzle-orm": "^0.45.4",
+    "hono": "^4.13.13",
+    "pino": "^10.4.0",
+    "serialport": "^13.0.0",
+    "ulid": "^3.0.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
+    "drizzle-kit": "^0.31.11",
+    "pino-pretty": "^13.2.0"
+  }
+}
