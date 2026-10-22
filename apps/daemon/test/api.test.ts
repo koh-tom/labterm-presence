@@ -158,3 +158,10 @@ describe("stats", () => {
     expect(body.heat).toHaveLength(7);
   });
 });
+
+describe("routing", () => {
+  it("returns 404 for unknown api paths", async () => {
+    const res = await app.request("/api/nope", { headers: HOST });
+    expect(res.status).toBe(404);
+  });
+});

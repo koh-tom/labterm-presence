@@ -218,6 +218,8 @@ export function createApp(deps: Deps) {
   const app = new Hono();
   app.use("*", guard(deps));
   app.route("/api", createApi(deps));
+  // 無い API に画面の HTML を返さない
+  app.all("/api/*", (c) => c.json({ error: "not found" }, 404));
 
   // ビルド済みの Web を同じ origin で配信する
   if (deps.webDir && existsSync(deps.webDir)) {
