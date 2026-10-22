@@ -117,7 +117,6 @@ export function Matrix({
             ) : null;
           return [
             monthHead,
-            // biome-ignore lint/a11y/useKeyWithClickEvents: キーボードでは日付のボタンと↑↓で選ぶ
             <div key={date} role="row" className="contents" onClick={() => onSelect(date)}>
               <button
                 type="button"
