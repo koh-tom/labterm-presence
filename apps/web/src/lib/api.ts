@@ -43,3 +43,16 @@ export function exportUrl(kind: "day" | "interval" | "json", r: Range): string {
   const q = `from=${r.from}&to=${r.to}`;
   return kind === "json" ? `/api/export.json?${q}` : `/api/export.csv?${q}&detail=${kind}`;
 }
+
+export type Edit =
+  | { kind: "state"; state: "in" | "away" | "out"; at: number }
+  | { kind: "void"; voids: string };
+
+export async function postEdit(e: Edit) {
+  const res = await fetch("/api/presence/events", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(e),
+  });
+  if (!res.ok) throw new Error(await res.text());
+}

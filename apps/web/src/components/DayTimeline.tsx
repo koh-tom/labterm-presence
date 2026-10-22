@@ -1,6 +1,9 @@
 import type { DayData } from "@labterm/core";
 import { dayStart } from "@labterm/core";
+import { Pencil } from "lucide-react";
+import { useState } from "react";
 import { clock, hm, md, weekday } from "../lib/format.ts";
+import { DayEditor } from "./DayEditor.tsx";
 
 export function DayTimeline({
   day,
@@ -13,6 +16,7 @@ export function DayTimeline({
   now: number;
   tz: string;
 }) {
+  const [editing, setEditing] = useState(false);
   if (!day) return null;
   const ds = dayStart(day.date, tz);
   const t0 = ds + hours[0] * 3600;
@@ -29,6 +33,15 @@ export function DayTimeline({
           {md(day.date)} <span className="font-sans text-sub">({weekday(day.date)})</span>
         </h2>
         <span className="num text-sm text-sub">{hm(day.summary.presenceSec)}</span>
+        <button
+          type="button"
+          aria-label="修正"
+          aria-pressed={editing}
+          onClick={() => setEditing((e) => !e)}
+          className={`ml-auto rounded-full p-1.5 hover:bg-cell ${editing ? "bg-cell text-fg" : "text-faint"}`}
+        >
+          <Pencil size={13} />
+        </button>
       </div>
 
       <div className="relative mt-4 h-10">
@@ -79,7 +92,18 @@ export function DayTimeline({
         {ins.length === 0 && (
           <span className="absolute top-5 text-[11px] text-faint">記録なし</span>
         )}
+        {day.segments
+          .filter((s) => s.manual)
+          .map((s) => (
+            <span
+              key={`${s.start}-m`}
+              title="手動で修正"
+              className="absolute -top-1.5 size-1 -translate-x-1/2 rounded-full bg-sub"
+              style={{ left: pos(s.start) }}
+            />
+          ))}
       </div>
+      {editing && <DayEditor day={day} tz={tz} now={now} />}
     </section>
   );
 }
