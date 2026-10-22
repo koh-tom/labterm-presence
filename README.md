@@ -31,6 +31,12 @@ pnpm start              # http://127.0.0.1:8787
 開発時は `pnpm dev` (Web は http://127.0.0.1:5173、`/api` は daemon に proxy)。
 `http://127.0.0.1:5173/?demo` で daemon 無しのデモデータを表示できる。
 
+実機が無いときは偽の端末で試せる (socat が必要):
+
+```sh
+pnpm fake-device        # 表示されたコマンドで daemon を起動し、i/a/o/u キーで入室・外出・退室・取消
+```
+
 常駐させる場合:
 
 ```sh

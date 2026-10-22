@@ -12,7 +12,8 @@
   "scripts": {
     "dev": "node --watch src/main.ts",
     "start": "node src/main.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "fake-device": "node scripts/fake-device.ts"
   },
   "dependencies": {
     "@date-fns/tz": "^1.5.0",
