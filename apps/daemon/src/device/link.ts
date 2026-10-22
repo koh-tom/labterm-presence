@@ -73,8 +73,12 @@ export class SerialLink implements Link {
       lock: true,
     });
     await new Promise<void>((ok, ng) => port.open((e) => (e ? ng(e) : ok())));
-    await new Promise<void>((ok, ng) =>
-      port.set({ rts: false, dtr: true }, (e) => (e ? ng(e) : ok())),
+    // 仮想シリアル (テスト用の pty) では設定できないので、失敗しても続ける
+    await new Promise<void>((ok) =>
+      port.set({ rts: false, dtr: true }, (e) => {
+        if (e) log.debug({ err: e.message }, "could not set rts/dtr");
+        ok();
+      }),
     );
     return new SerialLink(port, log);
   }
