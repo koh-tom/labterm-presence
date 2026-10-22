@@ -190,3 +190,14 @@ describe("hourRange", () => {
     expect(hourRange(splitByDay(late, "2026-10-22", "2026-10-23", now))).toEqual([0, 24]);
   });
 });
+
+describe("segment metadata", () => {
+  it("keeps start/end event ids and marks manual edits", () => {
+    const a = ev("2026-10-22 9:00", "in");
+    const b = { ...ev("2026-10-22 18:00", "out"), source: "web" as const };
+    const [s] = buildSegments([a, b]);
+    expect(s?.startEventId).toBe(a.id);
+    expect(s?.endEventId).toBe(b.id);
+    expect(s?.manual).toBe(true);
+  });
+});

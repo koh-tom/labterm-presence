@@ -23,6 +23,8 @@ export type Segment = {
   start: number;
   end: number | null;
   startEventId: string;
+  endEventId?: string;
+  manual?: boolean; // Web から手で直したイベントが含まれる
 };
 
 export type DailySummary = {

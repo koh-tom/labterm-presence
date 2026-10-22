@@ -27,6 +27,7 @@ export function buildSegments(events: PresenceEvent[]): Segment[] {
   const out: Segment[] = [];
   let state: PresenceState = "out";
   let cur: Segment | null = null;
+  let curManual = false;
 
   for (const e of evs) {
     const next = e.state as PresenceState;
@@ -35,11 +36,15 @@ export function buildSegments(events: PresenceEvent[]): Segment[] {
 
     if (cur) {
       cur.end = e.effectiveAt;
+      cur.endEventId = e.id;
+      if (curManual || e.source === "web") cur.manual = true;
       out.push(cur);
       cur = null;
     }
     if (next !== "out") {
       cur = { state: next, start: e.effectiveAt, end: null, startEventId: e.id };
+      curManual = e.source === "web";
+      if (curManual) cur.manual = true;
     }
     state = next;
   }
