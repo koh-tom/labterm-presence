@@ -12,7 +12,7 @@ const KIND_LABEL: Record<Cell["kind"], string> = {
 };
 
 const Square = memo(function Square({ c, tz, flash }: { c: Cell; tz: string; flash: boolean }) {
-  const label = c.focus ? "研究" : KIND_LABEL[c.kind];
+  const label = KIND_LABEL[c.kind];
   const title = label ? `${clock(c.start, tz)}–${clock(c.end, tz)} ${label}` : undefined;
   return (
     <div
@@ -21,7 +21,7 @@ const Square = memo(function Square({ c, tz, flash }: { c: Cell; tz: string; fla
       className={clsx(
         "cursor-pointer",
         "relative h-[18px] overflow-hidden rounded-[4px]",
-        c.kind === "in" && (c.focus ? "bg-presence-deep" : "bg-presence"),
+        c.kind === "in" && "bg-presence",
         (c.kind === "partial" || c.kind === "empty") && "bg-cell",
         c.kind === "away" && "bg-presence-soft",
         c.kind === "future" && "bg-cell/35",
