@@ -5,6 +5,7 @@ import type { DeviceState, PresenceState, SyncState } from "@labterm/core";
 export type LiveMessage =
   | { type: "device"; state: DeviceState }
   | { type: "presence"; eventId: string; at: number }
+  | { type: "focus"; at: number }
   | { type: "sync"; state: SyncState; imported?: number };
 
 type Entry = { id: number; msg: LiveMessage };

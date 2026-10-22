@@ -86,7 +86,14 @@ export function createApi(deps: Deps) {
 
   const range = (from: string, to: string) => {
     const end = dayStart(nextDate(to, 1, deps.tz), deps.tz);
-    return buildRange(deps.store.eventsUntil(end), from, to, now(), deps.tz);
+    return buildRange(
+      deps.store.eventsUntil(end),
+      from,
+      to,
+      now(),
+      deps.tz,
+      deps.store.focusUntil(end),
+    );
   };
 
   const parseRange = (q: Record<string, string>) => {

@@ -1,9 +1,9 @@
 // DB の読み書き。SQL は Drizzle 経由だけにする
-import type { PresenceEvent } from "@labterm/core";
+import type { FocusSession, PresenceEvent } from "@labterm/core";
 import { and, asc, desc, eq, gte, lt, lte, max } from "drizzle-orm";
 import { monotonicFactory } from "ulid";
 import type { Db } from "./db/index.ts";
-import { deviceSync, presenceEvents } from "./db/schema.ts";
+import { deviceSync, focusSessions, presenceEvents } from "./db/schema.ts";
 
 const ulid = monotonicFactory();
 export const newId = () => ulid();
@@ -62,6 +62,36 @@ export class Store {
       .where(and(eq(presenceEvents.deviceId, deviceId), eq(presenceEvents.gen, gen)))
       .get();
     return (r?.m ?? 0) + 1;
+  }
+
+  insertFocus(
+    deviceId: string,
+    f: { start: number; end: number; sec: number; done: boolean },
+  ): boolean {
+    const res = this.db
+      .insert(focusSessions)
+      .values({ deviceId, ...f, receivedAt: now() })
+      .onConflictDoNothing()
+      .run();
+    return res.changes > 0;
+  }
+
+  focusUntil(to: number): FocusSession[] {
+    return this.db
+      .select({ start: focusSessions.start, end: focusSessions.end })
+      .from(focusSessions)
+      .where(lt(focusSessions.start, to))
+      .orderBy(asc(focusSessions.start))
+      .all();
+  }
+
+  lastFocusStart(deviceId: string): number {
+    const r = this.db
+      .select({ m: max(focusSessions.start) })
+      .from(focusSessions)
+      .where(eq(focusSessions.deviceId, deviceId))
+      .get();
+    return r?.m ?? 0;
   }
 
   findBySeq(deviceId: string, gen: number, seq: number): PresenceEvent | undefined {

@@ -50,3 +50,17 @@ export const appSettings = sqliteTable("app_settings", {
   value: text("value").notNull(),
   updatedAt: integer("updated_at").notNull(),
 });
+
+// 研究タイマーで研究していた区間 (端末の focus.csv と同じもの)
+export const focusSessions = sqliteTable(
+  "focus_sessions",
+  {
+    deviceId: text("device_id").notNull(),
+    start: integer("start").notNull(),
+    end: integer("end").notNull(),
+    sec: integer("sec").notNull(),
+    done: integer("done", { mode: "boolean" }).notNull(),
+    receivedAt: integer("received_at").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.deviceId, t.start] }), index("focus_sessions_end").on(t.end)],
+);

@@ -74,6 +74,22 @@ describe.skipIf(!hasSocat)("serial (virtual port)", () => {
     expect(live.sync.state).toBe("ok");
   });
 
+  it("imports research sessions (offline and realtime)", async () => {
+    dev.press("in", false);
+    dev.research(50, 10, false);
+    svc.start();
+    await wait(500);
+    expect(store.focusUntil(now() + 60)).toHaveLength(1);
+    dev.research(25);
+    await wait(300);
+    expect(store.focusUntil(now() + 60)).toHaveLength(2);
+    // 繋ぎ直しても重複しない
+    await svc.stop();
+    svc.start();
+    await wait(500);
+    expect(store.focusUntil(now() + 60)).toHaveLength(2);
+  });
+
   it("applies undo", async () => {
     svc.start();
     await wait(400);

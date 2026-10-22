@@ -25,6 +25,10 @@ if (auto) {
   back(6, "away");
   back(5, "in");
   dev.clockOffset = 0;
+  dev.research(50, 8 * 60, false);
+  dev.research(50, 7 * 60, false);
+  dev.research(35, 4 * 60, false);
+  dev.research(50, 60, false);
 }
 
 // 試すときは本物のデータを汚さないように一時フォルダを使う
@@ -39,11 +43,12 @@ if (auto) {
   let i = 0;
   setInterval(() => {
     dev.press(cycle[i % cycle.length] as "in" | "away" | "out");
+    if (dev.state === "in") dev.research(1);
     i++;
     show();
   }, 20000);
 } else {
-  console.log("i=入室 a=外出 o=退室 u=取消 x=オフラインで入室 q=終了");
+  console.log("i=入室 a=外出 o=退室 u=取消 r=研究を1区間 x=オフラインで入室 q=終了");
 }
 
 process.stdin.setRawMode?.(true);
@@ -53,6 +58,7 @@ process.stdin.on("data", async (k: string) => {
   else if (k === "a") dev.press("away");
   else if (k === "o") dev.press("out");
   else if (k === "u") dev.undo();
+  else if (k === "r") dev.research(25);
   else if (k === "x") dev.press("in", false);
   else if (k === "q" || k === "\u0003") {
     await dev.close();

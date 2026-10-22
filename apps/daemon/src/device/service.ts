@@ -3,6 +3,7 @@ import {
   currentState,
   type DeviceMessage,
   type EventMessage,
+  type FocusMessage,
   type HelloMessage,
 } from "@labterm/core";
 import type pino from "pino";
@@ -114,6 +115,7 @@ export class DeviceService {
       }
 
       const imported = await this.fetchSince(link, hello);
+      await this.fetchFocus(link, hello);
       await this.checkState();
       if (this.live.sync.state === "syncing") this.live.setSync("ok", imported);
     } finally {
@@ -138,6 +140,28 @@ export class DeviceService {
     return imported;
   }
 
+  // 研究タイマーの区間。最後に取り込んだものより後に始まった分だけもらう
+  private async fetchFocus(link: Link, hello: HelloMessage) {
+    const after = this.store.lastFocusStart(hello.device);
+    const msgs = await link.request(`focus ${after}`, 15000);
+    let n = 0;
+    for (const m of msgs) {
+      if (m.type === "focus" && this.saveFocus(m, hello.device)) n++;
+    }
+    if (n) this.log.info({ imported: n }, "imported focus sessions");
+  }
+
+  private saveFocus(m: FocusMessage, deviceId: string): boolean {
+    const ok = this.store.insertFocus(deviceId, {
+      start: m.start,
+      end: m.end,
+      sec: m.sec,
+      done: m.done,
+    });
+    if (ok) this.live.publish({ type: "focus", at: m.end });
+    return ok;
+  }
+
   private save(m: EventMessage, deviceId: string, realtime: boolean, raw?: string): boolean {
     const target =
       m.kind === "void" ? this.store.findBySeq(deviceId, m.gen, m.voids ?? 0)?.id : undefined;
@@ -149,7 +173,12 @@ export class DeviceService {
 
   private async onRealtime(msg: DeviceMessage, raw: string) {
     const hello = this.hello;
-    if (msg.type !== "event" || !hello) return;
+    if (!hello) return;
+    if (msg.type === "focus") {
+      this.saveFocus(msg, hello.device);
+      return;
+    }
+    if (msg.type !== "event") return;
     const last = this.store.lastSeq(hello.device, msg.gen);
     if (msg.gen !== hello.gen || msg.seq !== last + 1) {
       // 抜けがある (または端末が初期化された) ので同期し直す

@@ -104,7 +104,7 @@ export class SerialLink implements Link {
           this.pending.delete(p.re);
           p.resolve(p.msgs);
         }
-      } else if (msg.type === "event") {
+      } else if (msg.type === "event" || msg.type === "focus") {
         for (const fn of this.eventFns) fn(msg, line);
       }
     }

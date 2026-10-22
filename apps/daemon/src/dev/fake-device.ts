@@ -19,6 +19,7 @@ export class FakeDevice {
   state: State = "out";
   since = 0;
   events: Ev[] = [];
+  focus: { start: number; end: number; sec: number; done: boolean }[] = [];
   epoch = () => Math.floor(Date.now() / 1000) + this.clockOffset;
   clockOffset = 0;
   private port: SerialPort | null = null;
@@ -69,6 +70,14 @@ export class FakeDevice {
     this.state = state;
     this.since = e.epoch;
     if (online) this.write(this.eventJson(e));
+  }
+
+  // 研究タイマーで1区間研究した (今から minutes 分前まで)
+  research(minutes: number, endedAgoMin = 0, online = true) {
+    const end = this.epoch() - endedAgoMin * 60;
+    const f = { start: end - minutes * 60, end, sec: minutes * 60, done: minutes >= 50 };
+    this.focus.push(f);
+    if (online) this.write({ type: "focus", ...f });
   }
 
   undo(online = true) {
@@ -126,6 +135,11 @@ export class FakeDevice {
       const [g, s] = cmd.slice(6).split(" ").map(Number);
       const list = g === this.gen ? this.events.filter((e) => e.seq > (s ?? 0)) : [];
       for (const e of list) this.write(this.eventJson(e, re));
+      this.write({ type: "end", re, count: list.length });
+    } else if (cmd.startsWith("focus ")) {
+      const after = Number(cmd.slice(6));
+      const list = this.focus.filter((f) => f.start > after);
+      for (const f of list) this.write({ type: "focus", re, ...f });
       this.write({ type: "end", re, count: list.length });
     } else if (cmd.startsWith("time ")) {
       this.clockOffset = Number(cmd.slice(5)) - Math.floor(Date.now() / 1000);
