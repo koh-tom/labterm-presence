@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Popover } from "radix-ui";
 import { useState } from "react";
 import { type Preset, type Range, rangeLabel } from "../lib/range.ts";
+import { ExportMenu } from "./ExportMenu.tsx";
 
 const PRESETS: { id: Preset; label: string }[] = [
   { id: "week", label: "今週" },
@@ -139,6 +140,7 @@ export function RangeBar({
           ]}
           onChange={onResolution}
         />
+        <ExportMenu range={range} />
       </div>
     </div>
   );

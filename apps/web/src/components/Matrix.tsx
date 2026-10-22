@@ -15,10 +15,12 @@ const Square = memo(function Square({
   c,
   tz,
   groupStart,
+  flash,
 }: {
   c: Cell;
   tz: string;
   groupStart: boolean;
+  flash: boolean;
 }) {
   const title = KIND_LABEL[c.kind]
     ? `${clock(c.start, tz)}–${clock(c.end, tz)} ${KIND_LABEL[c.kind]}`
@@ -36,6 +38,7 @@ const Square = memo(function Square({
         c.kind === "away" && "bg-presence-soft",
         c.kind === "future" && "bg-cell/35",
         c.now && "now-pulse ring-[1.5px] ring-fg/50",
+        flash && "flash",
       )}
     >
       {c.kind === "partial" && (
@@ -57,6 +60,7 @@ export function Matrix({
   today,
   selected,
   onSelect,
+  flashAt,
 }: {
   days: DayData[];
   hours: [number, number];
@@ -66,6 +70,7 @@ export function Matrix({
   today: string;
   selected: string;
   onSelect: (date: string) => void;
+  flashAt?: number | null;
 }) {
   const perHour = 60 / resolution;
   const cols = (hours[1] - hours[0]) * perHour;
@@ -136,7 +141,13 @@ export function Matrix({
                 <span className="font-sans">{weekday(date)}</span>
               </button>
               {cells.map((c, i) => (
-                <Square key={c.start} c={c} tz={tz} groupStart={i > 0 && i % (2 * perHour) === 0} />
+                <Square
+                  key={c.start}
+                  c={c}
+                  tz={tz}
+                  groupStart={i > 0 && i % (2 * perHour) === 0}
+                  flash={flashAt != null && c.start <= flashAt && flashAt < c.end}
+                />
               ))}
             </div>,
           ];

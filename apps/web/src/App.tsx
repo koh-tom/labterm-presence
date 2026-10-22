@@ -5,7 +5,8 @@ import { Matrix } from "./components/Matrix.tsx";
 import { RangeBar } from "./components/RangeBar.tsx";
 import { Stats } from "./components/Stats.tsx";
 import { StatusLine } from "./components/StatusLine.tsx";
-import { usePresence, useStatus } from "./lib/api.ts";
+import { requestSync, usePresence, useStatus } from "./lib/api.ts";
+import { useLive } from "./lib/live.ts";
 import { presetRange, type Range, readUrl, shiftRange, writeUrl } from "./lib/range.ts";
 
 const TZ = "Asia/Tokyo";
@@ -23,6 +24,7 @@ export function App() {
   const [resolution, setResolutionState] = useState(loadResolution);
   const presence = usePresence(range);
   const status = useStatus();
+  const flashAt = useLive();
   const data = presence.data;
   const now = data?.now ?? Math.floor(Date.now() / 1000);
   const today = dateOf(now, TZ);
@@ -68,7 +70,7 @@ export function App() {
 
   return (
     <main className="mx-auto max-w-[1240px] px-6 py-8 sm:px-10 sm:py-10">
-      <StatusLine status={status.data} tz={TZ} />
+      <StatusLine status={status.data} tz={TZ} onSync={() => void requestSync()} />
 
       <div className="mt-10">
         <Stats data={data} inLab={inLab} />
@@ -96,6 +98,7 @@ export function App() {
             today={today}
             selected={day?.date ?? ""}
             onSelect={setSelected}
+            flashAt={flashAt}
           />
         )}
       </div>

@@ -143,7 +143,7 @@ export class DeviceService {
       m.kind === "void" ? this.store.findBySeq(deviceId, m.gen, m.voids ?? 0)?.id : undefined;
     const e = toPresenceEvent(m, deviceId, now(), realtime, target);
     const ok = this.store.insert(e, raw);
-    if (ok) this.live.publish({ type: "presence", eventId: e.id });
+    if (ok) this.live.publish({ type: "presence", eventId: e.id, at: e.effectiveAt });
     return ok;
   }
 

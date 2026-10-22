@@ -30,3 +30,16 @@ export function useStatus() {
     refetchInterval: 30_000,
   });
 }
+
+export function requestSync() {
+  return fetch("/api/sync", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: "{}",
+  });
+}
+
+export function exportUrl(kind: "day" | "interval" | "json", r: Range): string {
+  const q = `from=${r.from}&to=${r.to}`;
+  return kind === "json" ? `/api/export.json?${q}` : `/api/export.csv?${q}&detail=${kind}`;
+}
