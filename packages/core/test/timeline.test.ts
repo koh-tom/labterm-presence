@@ -201,3 +201,19 @@ describe("segment metadata", () => {
     expect(s?.manual).toBe(true);
   });
 });
+
+describe("focus", () => {
+  it("marks in-cells where research covered half or more", () => {
+    const segs = buildSegments([ev("2026-10-22 9:00", "in"), ev("2026-10-22 12:00", "out")]);
+    const now = at("2026-10-22 20:00");
+    const day = splitByDay(segs, "2026-10-22", "2026-10-22", now).get("2026-10-22") ?? [];
+    const focus = [{ start: at("2026-10-22 9:00"), end: at("2026-10-22 9:50") }];
+    const cells = toCells("2026-10-22", day, { resolutionMin: 30, hours: [9, 11], now, focus });
+    expect(cells.map((c) => c.focus)).toEqual([true, true, false, false]);
+  });
+
+  it("sums focus time per day", () => {
+    const s = summarizeDay("2026-10-22", [], 0, [{ start: 0, end: 3000 }]);
+    expect(s.focusSec).toBe(3000);
+  });
+});

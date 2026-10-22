@@ -2,6 +2,7 @@ import { dayStart, nextDate } from "./time.ts";
 import type {
   Cell,
   DailySummary,
+  FocusSession,
   PresenceEvent,
   PresenceState,
   RangeSummary,
@@ -79,7 +80,33 @@ export function splitByDay(
   return days;
 }
 
-export function summarizeDay(date: string, segs: Segment[], now: number): DailySummary {
+// 研究の区間を日ごとに切る
+export function splitFocusByDay(
+  sessions: FocusSession[],
+  from: string,
+  to: string,
+  tz?: string,
+): Map<string, FocusSession[]> {
+  const days = new Map<string, FocusSession[]>();
+  for (let d = from; d <= to; d = nextDate(d, 1, tz)) {
+    const ds = dayStart(d, tz);
+    const de = dayStart(nextDate(d, 1, tz), tz);
+    days.set(
+      d,
+      sessions
+        .filter((s) => s.end > ds && s.start < de)
+        .map((s) => ({ start: Math.max(s.start, ds), end: Math.min(s.end, de) })),
+    );
+  }
+  return days;
+}
+
+export function summarizeDay(
+  date: string,
+  segs: Segment[],
+  now: number,
+  focus: FocusSession[] = [],
+): DailySummary {
   let presenceSec = 0;
   let awaySec = 0;
   const ins = segs.filter((s) => s.state === "in");
@@ -95,14 +122,16 @@ export function summarizeDay(date: string, segs: Segment[], now: number): DailyS
     lastDeparture: last ? last.end : null,
     presenceSec,
     awaySec,
+    focusSec: focus.reduce((a, f) => a + (f.end - f.start), 0),
     intervalCount: ins.length,
   };
 }
 
 export function summarizeRange(days: DailySummary[]): RangeSummary {
   const totalSec = days.reduce((a, d) => a + d.presenceSec, 0);
+  const focusSec = days.reduce((a, d) => a + d.focusSec, 0);
   const labDays = days.filter((d) => d.presenceSec >= LAB_DAY_MIN_SEC).length;
-  return { totalSec, labDays, averageSec: labDays ? Math.round(totalSec / labDays) : 0 };
+  return { totalSec, focusSec, labDays, averageSec: labDays ? Math.round(totalSec / labDays) : 0 };
 }
 
 // 表示する時間帯。通常 7〜24時で、それより早い在室があれば広げる
@@ -120,6 +149,7 @@ export type CellOptions = {
   hours: [number, number];
   now: number;
   tz?: string;
+  focus?: FocusSession[];
 };
 
 // 1日分のマス (途中まで在室のマスは partial。表示では空として切り捨てる)
@@ -146,6 +176,13 @@ export function toCells(date: string, segs: Segment[], opt: CellOptions): Cell[]
       }
     }
 
+    let focused = 0;
+    for (const f of opt.focus ?? []) {
+      const a = Math.max(f.start, cs);
+      const b = Math.min(f.end, ce);
+      if (b > a) focused += b - a;
+    }
+
     let kind: Cell["kind"] = "empty";
     if (covered >= step * 0.98) kind = "in";
     else if (covered > 0) kind = "partial";
@@ -156,6 +193,7 @@ export function toCells(date: string, segs: Segment[], opt: CellOptions): Cell[]
       start: cs,
       end: ce,
       kind,
+      focus: kind === "in" && focused >= step / 2,
       from: covered > 0 ? (first - cs) / step : 0,
       to: covered > 0 ? (last - cs) / step : 0,
       now: cs <= opt.now && opt.now < ce,

@@ -47,20 +47,33 @@ const Event = z
     message: "state event needs state, void event needs voids",
   });
 
+// 研究タイマーの区間
+const Focus = z
+  .object({
+    type: z.literal("focus"),
+    re: re.optional(),
+    start: epoch,
+    end: epoch,
+    sec: z.number().int().min(0).max(86400),
+    done: z.boolean(),
+  })
+  .refine((f) => f.end >= f.start, { message: "end before start" });
+
 const End = z.object({ type: z.literal("end"), re, count: z.number().int().min(0) });
 const Ok = z.object({ type: z.literal("ok"), re });
 const Err = z.object({ type: z.literal("error"), re, code: z.string().max(32) });
 
-export const DeviceMessage = z.union([Hello, State, Event, End, Ok, Err]);
+export const DeviceMessage = z.union([Hello, State, Event, Focus, End, Ok, Err]);
 export type DeviceMessage = z.infer<typeof DeviceMessage>;
 export type HelloMessage = z.infer<typeof Hello>;
 export type EventMessage = z.infer<typeof Event>;
+export type FocusMessage = z.infer<typeof Focus>;
 
 export type ParseResult =
   | { ok: true; msg: DeviceMessage }
   | { ok: false; reason: "ignored" | "bad_json" | "bad_schema" | "unknown_type"; detail?: string };
 
-const KNOWN = new Set(["hello", "state", "event", "end", "ok", "error"]);
+const KNOWN = new Set(["hello", "state", "event", "focus", "end", "ok", "error"]);
 
 // 1行を解釈する。@labterm 以外の行 (人間向けの出力やESPのログ) は ignored
 export function parseLine(line: string): ParseResult {

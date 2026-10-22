@@ -1,11 +1,26 @@
 // daemon と Web でやりとりする形。集計は daemon でもデモでも同じ関数で作る
 import { dateOf } from "./time.ts";
-import { buildSegments, hourRange, splitByDay, summarizeDay, summarizeRange } from "./timeline.ts";
-import type { DailySummary, PresenceEvent, PresenceState, RangeSummary, Segment } from "./types.ts";
+import {
+  buildSegments,
+  hourRange,
+  splitByDay,
+  splitFocusByDay,
+  summarizeDay,
+  summarizeRange,
+} from "./timeline.ts";
+import type {
+  DailySummary,
+  FocusSession,
+  PresenceEvent,
+  PresenceState,
+  RangeSummary,
+  Segment,
+} from "./types.ts";
 
 export type DayData = {
   date: string;
   segments: Segment[];
+  focus: FocusSession[];
   summary: DailySummary;
 };
 
@@ -38,17 +53,19 @@ export function buildRange(
   to: string,
   now: number,
   tz: string,
+  focus: FocusSession[] = [],
 ): PresenceRange {
   const segs = buildSegments(events);
   const byDay = splitByDay(segs, from, to, now, tz);
-  const days: DayData[] = [...byDay].map(([date, segments]) => ({
-    date,
-    segments,
-    summary: summarizeDay(date, segments, now),
-  }));
+  const focusByDay = splitFocusByDay(focus, from, to, tz);
+  const days: DayData[] = [...byDay].map(([date, segments]) => {
+    const f = focusByDay.get(date) ?? [];
+    return { date, segments, focus: f, summary: summarizeDay(date, segments, now, f) };
+  });
 
   const today = dateOf(now, tz);
   const todaySegs = splitByDay(segs, today, today, now, tz).get(today) ?? [];
+  const todayFocus = splitFocusByDay(focus, today, today, tz).get(today) ?? [];
 
   return {
     from,
@@ -58,7 +75,7 @@ export function buildRange(
     hours: hourRange(byDay, tz),
     days,
     range: summarizeRange(days.map((d) => d.summary)),
-    today: summarizeDay(today, todaySegs, now),
+    today: summarizeDay(today, todaySegs, now, todayFocus),
   };
 }
 
