@@ -11,17 +11,7 @@ const KIND_LABEL: Record<Cell["kind"], string> = {
   future: "",
 };
 
-const Square = memo(function Square({
-  c,
-  tz,
-  groupStart,
-  flash,
-}: {
-  c: Cell;
-  tz: string;
-  groupStart: boolean;
-  flash: boolean;
-}) {
+const Square = memo(function Square({ c, tz, flash }: { c: Cell; tz: string; flash: boolean }) {
   const title = KIND_LABEL[c.kind]
     ? `${clock(c.start, tz)}–${clock(c.end, tz)} ${KIND_LABEL[c.kind]}`
     : undefined;
@@ -32,7 +22,6 @@ const Square = memo(function Square({
       className={clsx(
         "cursor-pointer",
         "relative h-[18px] overflow-hidden rounded-[4px]",
-        groupStart && "ml-[3px]",
         c.kind === "in" && "bg-presence",
         (c.kind === "partial" || c.kind === "empty") && "bg-cell",
         c.kind === "away" && "bg-presence-soft",
@@ -99,7 +88,7 @@ export function Matrix({
         {labels.map((h) => (
           <div
             key={h}
-            className="num pb-1 pl-[3px] text-[11px] text-faint"
+            className="num pb-1 text-[11px] text-faint"
             style={{
               // 最後のラベルが端からはみ出すと列が増えて行がずれるので切る
               gridColumn: `${(h - hours[0]) * perHour + 2} / span ${Math.min(2 * perHour, (hours[1] - h) * perHour)}`,
@@ -143,12 +132,11 @@ export function Matrix({
                 <span className="w-4 text-right">{day}</span>
                 <span className="font-sans">{weekday(date)}</span>
               </button>
-              {cells.map((c, i) => (
+              {cells.map((c) => (
                 <Square
                   key={c.start}
                   c={c}
                   tz={tz}
-                  groupStart={i > 0 && i % (2 * perHour) === 0}
                   flash={flashAt != null && c.start <= flashAt && flashAt < c.end}
                 />
               ))}
