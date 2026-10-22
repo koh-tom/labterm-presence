@@ -122,7 +122,7 @@ export type CellOptions = {
   tz?: string;
 };
 
-// 1日分のマス
+// 1日分のマス (途中まで在室のマスは partial。表示では空として切り捨てる)
 export function toCells(date: string, segs: Segment[], opt: CellOptions): Cell[] {
   const ds = dayStart(date, opt.tz);
   const step = opt.resolutionMin * 60;

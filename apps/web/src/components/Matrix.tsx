@@ -5,7 +5,7 @@ import { clock, isWeekend, weekday } from "../lib/format.ts";
 
 const KIND_LABEL: Record<Cell["kind"], string> = {
   in: "在室",
-  partial: "在室",
+  partial: "",
   away: "外出",
   empty: "",
   future: "",
@@ -29,14 +29,7 @@ const Square = memo(function Square({ c, tz, flash }: { c: Cell; tz: string; fla
         c.now && "now-pulse ring-[1.5px] ring-fg/50",
         flash && "flash",
       )}
-    >
-      {c.kind === "partial" && (
-        <div
-          className="absolute inset-y-0 rounded-[3px] bg-presence"
-          style={{ left: `${c.from * 100}%`, width: `${Math.max(8, (c.to - c.from) * 100)}%` }}
-        />
-      )}
-    </div>
+    ></div>
   );
 });
 
