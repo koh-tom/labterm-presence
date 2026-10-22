@@ -1,7 +1,7 @@
 import { type Cell, type DayData, toCells } from "@labterm/core";
 import clsx from "clsx";
 import { memo, useMemo } from "react";
-import { clock, isWeekend, weekday } from "../lib/format.ts";
+import { clock, hm, isWeekend, weekday } from "../lib/format.ts";
 
 const KIND_LABEL: Record<Cell["kind"], string> = {
   in: "在室",
@@ -60,6 +60,7 @@ export function Matrix({
     () =>
       days.map((d) => ({
         date: d.date,
+        total: d.summary.presenceSec,
         cells: toCells(d.date, d.segments, { resolutionMin: resolution, hours, now, tz }),
       })),
     [days, hours, resolution, now, tz],
@@ -75,7 +76,10 @@ export function Matrix({
         role="grid"
         aria-label="在室のマス目"
         className="grid min-w-[760px] items-center gap-y-[3px]"
-        style={{ gridTemplateColumns: `3.75rem repeat(${cols}, minmax(0, 1fr))`, columnGap: 2 }}
+        style={{
+          gridTemplateColumns: `3.75rem repeat(${cols}, minmax(0, 1fr)) 3.25rem`,
+          columnGap: 2,
+        }}
       >
         <div />
         {labels.map((h) => (
@@ -91,7 +95,9 @@ export function Matrix({
           </div>
         ))}
 
-        {rows.map(({ date, cells }, ri) => {
+        <div />
+
+        {rows.map(({ date, cells, total }, ri) => {
           const isSel = date === selected;
           const day = Number(date.slice(8));
           // 期間が月をまたぐときは、月の頭に小さく月を出す
@@ -133,6 +139,9 @@ export function Matrix({
                   flash={flashAt != null && c.start <= flashAt && flashAt < c.end}
                 />
               ))}
+              <span className="num pl-2 text-right text-[11px] text-faint">
+                {total >= 60 ? hm(total) : ""}
+              </span>
             </div>,
           ];
         })}
