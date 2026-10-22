@@ -1,0 +1,111 @@
+import { dayStart, type PresenceEvent, type PresenceRange } from "@labterm/core";
+import { beforeEach, describe, expect, it } from "vitest";
+import { createApp } from "../src/app.ts";
+import { openDb } from "../src/db/index.ts";
+import { Live } from "../src/live.ts";
+import { newId, Store } from "../src/store.ts";
+
+const TZ = "Asia/Tokyo";
+const HOST = { host: "127.0.0.1:8787" };
+const NOW = dayStart("2026-10-22", TZ) + 20 * 3600;
+
+let store: Store;
+let app: ReturnType<typeof createApp>;
+
+function ev(seq: number, hour: number, state: "in" | "away" | "out"): PresenceEvent {
+  const t = dayStart("2026-10-22", TZ) + hour * 3600;
+  return {
+    id: newId(),
+    kind: "state",
+    state,
+    deviceId: "d",
+    gen: 1,
+    seq,
+    deviceEpoch: t,
+    receivedAt: t,
+    effectiveAt: t,
+    source: "button",
+    flags: [],
+  };
+}
+
+beforeEach(() => {
+  store = new Store(openDb(":memory:").db);
+  app = createApp({ store, live: new Live(), tz: TZ, port: 8787, now: () => NOW });
+});
+
+describe("guard", () => {
+  it("rejects other hosts (dns rebinding)", async () => {
+    const res = await app.request("/api/health", { headers: { host: "evil.example:8787" } });
+    expect(res.status).toBe(421);
+  });
+
+  it("rejects other origins", async () => {
+    const res = await app.request("/api/health", {
+      headers: { ...HOST, origin: "https://evil.example" },
+    });
+    expect(res.status).toBe(403);
+  });
+
+  it("rejects non-json posts (csrf)", async () => {
+    const res = await app.request("/api/sync", {
+      method: "POST",
+      headers: { ...HOST, "content-type": "text/plain" },
+      body: "x",
+    });
+    expect(res.status).toBe(415);
+  });
+
+  it("allows same origin", async () => {
+    const res = await app.request("/api/sync", {
+      method: "POST",
+      headers: { ...HOST, origin: "http://127.0.0.1:8787", "content-type": "application/json" },
+      body: "{}",
+    });
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-security-policy")).toContain("default-src 'self'");
+  });
+});
+
+describe("presence", () => {
+  it("validates the range", async () => {
+    const bad = await app.request("/api/presence?from=2026-10-31&to=2026-10-01", { headers: HOST });
+    expect(bad.status).toBe(400);
+    const long = await app.request("/api/presence?from=2025-01-01&to=2026-10-01", {
+      headers: HOST,
+    });
+    expect(long.status).toBe(400);
+    const junk = await app.request("/api/presence?from=2026-13-01&to=2026-13-02", {
+      headers: HOST,
+    });
+    expect(junk.status).toBe(400);
+  });
+
+  it("summarizes stored events", async () => {
+    store.insert(ev(1, 9, "in"));
+    store.insert(ev(2, 12, "away"));
+    store.insert(ev(3, 13, "in"));
+    store.insert(ev(4, 18, "out"));
+    const res = await app.request("/api/presence?from=2026-10-01&to=2026-10-31", { headers: HOST });
+    const body = (await res.json()) as PresenceRange;
+    expect(body.days).toHaveLength(31);
+    expect(body.range.totalSec).toBe(8 * 3600);
+    expect(body.range.labDays).toBe(1);
+  });
+
+  it("ignores duplicates", () => {
+    const e = ev(1, 9, "in");
+    expect(store.insert(e)).toBe(true);
+    expect(store.insert({ ...e, id: newId() })).toBe(false);
+  });
+
+  it("exports csv", async () => {
+    store.insert(ev(1, 9, "in"));
+    store.insert(ev(2, 18, "out"));
+    const res = await app.request("/api/export.csv?from=2026-10-22&to=2026-10-22", {
+      headers: HOST,
+    });
+    const text = await res.text();
+    expect(text).toContain("2026-10-22,2026-10-22T09:00:00+09:00,2026-10-22T18:00:00+09:00,540,0");
+  });
+});
