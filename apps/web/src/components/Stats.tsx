@@ -13,11 +13,11 @@ export function Stats({ data, inLab }: { data?: PresenceRange; inLab: boolean })
       {items.map((it) => (
         <div key={it.label}>
           <dd
-            className={`num text-4xl font-light tracking-tight ${it.accent ? "text-presence" : ""}`}
+            className={`num text-[44px] leading-none font-extralight tracking-[-0.02em] ${it.accent ? "text-presence" : ""}`}
           >
             {it.value}
           </dd>
-          <dt className="mt-1 text-xs text-sub">{it.label}</dt>
+          <dt className="mt-2.5 text-xs text-sub">{it.label}</dt>
         </div>
       ))}
     </dl>

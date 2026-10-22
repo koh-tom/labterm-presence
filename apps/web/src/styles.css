@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "@fontsource-variable/noto-sans-jp";
-@import "@fontsource-variable/geist-mono";
+@import "@fontsource-variable/geist";
 
 /* 色は在室の緑1色だけ。あとはモノクロ */
 :root {
@@ -41,7 +41,7 @@
   --color-warn: var(--warn);
   --color-danger: var(--danger);
   --font-sans: "Noto Sans JP Variable", system-ui, sans-serif;
-  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+  --font-num: "Geist Variable", "Noto Sans JP Variable", system-ui, sans-serif;
 }
 
 html,
@@ -52,9 +52,11 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* 数字は Geist (等幅数字で桁がそろう) */
 .num {
-  font-family: var(--font-mono);
+  font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum", "ss01";
 }
 
 @keyframes now-pulse {
