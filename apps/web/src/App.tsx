@@ -1,4 +1,4 @@
-import { dateOf } from "@labterm/core";
+import { dateOf, datesBetween, nextDate } from "@labterm/core";
 import { useCallback, useEffect, useState } from "react";
 import { DayTimeline } from "./components/DayTimeline.tsx";
 import { Matrix } from "./components/Matrix.tsx";
@@ -6,10 +6,20 @@ import { RangeBar } from "./components/RangeBar.tsx";
 import { Stats } from "./components/Stats.tsx";
 import { StatusLine } from "./components/StatusLine.tsx";
 import { requestSync, usePresence, useStatus } from "./lib/api.ts";
+import { hm } from "./lib/format.ts";
 import { useLive } from "./lib/live.ts";
 import { presetRange, type Range, readUrl, shiftRange, writeUrl } from "./lib/range.ts";
 
 const TZ = "Asia/Tokyo";
+
+// 前の同じ長さの期間。今日を含む期間なら、今日までと同じ日数だけで比べる
+function previousRange(r: Range, today: string): Range {
+  const prev = shiftRange(r, -1, TZ);
+  if (today < r.from || today > r.to) return prev;
+  const elapsed = datesBetween(r.from, today, TZ).length;
+  const to = nextDate(prev.from, elapsed - 1, TZ);
+  return { ...prev, to: to < prev.to ? to : prev.to };
+}
 
 function loadResolution(): number {
   try {
@@ -23,6 +33,7 @@ export function App() {
   const [range, setRangeState] = useState<Range>(() => readUrl(new Date()));
   const [resolution, setResolutionState] = useState(loadResolution);
   const presence = usePresence(range);
+  const prev = usePresence(previousRange(range, dateOf(Math.floor(Date.now() / 1000), TZ)));
   const status = useStatus();
   const flashAt = useLive();
   const data = presence.data;
@@ -46,10 +57,24 @@ export function App() {
     } catch {}
   };
 
-  // ↑↓ で日、←→ で期間を移動
+  // タブの名前に状態と今日の時間を出す
+  useEffect(() => {
+    const p = status.data?.presence.state;
+    const t = data ? hm(data.today.presenceSec) : "";
+    document.title =
+      p === "in" ? `● ${t} 在室` : p === "away" ? `○ ${t} 外出` : t ? `${t} · 在室` : "在室";
+  }, [status.data, data]);
+
+  // ↑↓ で日、←→ で期間を移動、t で今日
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement) return;
+      if (e.key === "t" && !e.ctrlKey && !e.metaKey) {
+        const p = range.preset === "custom" ? "month" : range.preset;
+        setRange(presetRange(p, new Date()));
+        setSelected(today);
+        return;
+      }
       if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
         setRange(shiftRange(range, e.key === "ArrowLeft" ? -1 : 1, TZ));
       } else if ((e.key === "ArrowUp" || e.key === "ArrowDown") && data) {
@@ -63,7 +88,7 @@ export function App() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [range, data, selected, setRange]);
+  }, [range, data, selected, setRange, today]);
 
   const day = data?.days.find((d) => d.date === selected) ?? data?.days.at(-1);
   const inLab = status.data?.presence.state === "in";
@@ -73,7 +98,7 @@ export function App() {
       <StatusLine status={status.data} tz={TZ} onSync={() => void requestSync()} />
 
       <div className="mt-10">
-        <Stats data={data} inLab={inLab} />
+        <Stats data={data} prev={prev.data} inLab={inLab} />
       </div>
 
       <div className="mt-12 max-sm:hidden">
