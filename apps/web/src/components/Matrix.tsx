@@ -100,7 +100,10 @@ export function Matrix({
           <div
             key={h}
             className="num pb-1 pl-[3px] text-[11px] text-faint"
-            style={{ gridColumn: `${(h - hours[0]) * perHour + 2} / span ${2 * perHour}` }}
+            style={{
+              // 最後のラベルが端からはみ出すと列が増えて行がずれるので切る
+              gridColumn: `${(h - hours[0]) * perHour + 2} / span ${Math.min(2 * perHour, (hours[1] - h) * perHour)}`,
+            }}
           >
             {h}
           </div>

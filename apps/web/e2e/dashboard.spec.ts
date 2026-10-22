@@ -29,3 +29,17 @@ test("moves between months", async ({ page }) => {
   await expect(page.getByText("2026年11月")).toBeVisible();
   await expect(page.getByRole("rowheader")).toHaveCount(30);
 });
+
+test("rows stay aligned for any hour range", async ({ page }) => {
+  // 7時始まりなど、時刻のラベルが端で切れる範囲でも日付の列がずれない
+  for (const q of [
+    "p=week&from=2026-10-19&to=2026-10-25",
+    "p=month&from=2026-10-01&to=2026-10-31",
+  ]) {
+    await page.goto(`/?demo&${q}`);
+    const xs = await page
+      .getByRole("rowheader")
+      .evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().left)));
+    expect(new Set(xs).size).toBe(1);
+  }
+});
