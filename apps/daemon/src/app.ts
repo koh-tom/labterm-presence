@@ -7,14 +7,16 @@ import {
   isValidDate,
   MAX_RANGE_DAYS,
   nextDate,
+  type PresenceEvent,
   type Status,
+  VALID_SINCE,
 } from "@labterm/core";
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import { z } from "zod";
 import { dailyCsv, intervalCsv } from "./csv.ts";
 import type { Live } from "./live.ts";
-import { now as nowSec, type Store } from "./store.ts";
+import { newId, now as nowSec, type Store } from "./store.ts";
 
 export type Deps = {
   store: Store;
@@ -33,6 +35,16 @@ const RangeQuery = z
     to: z.string().refine(isValidDate),
   })
   .refine((q) => q.from <= q.to);
+
+// Web からの手動修正。PC の履歴だけを直す (端末の状態は変えない)
+const Edit = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("state"),
+    state: z.enum(["in", "away", "out"]),
+    at: z.number().int(),
+  }),
+  z.object({ kind: z.literal("void"), voids: z.string().regex(/^[0-9A-Z]{26}$/) }),
+]);
 
 // ブラウザ経由の攻撃 (DNS rebinding / CSRF) を防ぐ
 function guard(deps: Deps) {
@@ -108,6 +120,35 @@ export function createApi(deps: Deps) {
       const from = dayStart(q.from, deps.tz);
       const to = dayStart(nextDate(q.to, 1, deps.tz), deps.tz) - 1;
       return c.json(deps.store.eventsBetween(from, to));
+    })
+    .post("/presence/events", async (c) => {
+      const body = Edit.safeParse(await c.req.json().catch(() => null));
+      if (!body.success) return c.json({ error: "bad request" }, 400);
+      const t = now();
+      const e = body.data;
+      if (e.kind === "state" && (e.at < VALID_SINCE || e.at > t + 60)) {
+        return c.json({ error: "bad time" }, 400);
+      }
+      if (e.kind === "void" && !deps.store.getById(e.voids)) {
+        return c.json({ error: "not found" }, 404);
+      }
+      const ev: PresenceEvent = {
+        id: newId(),
+        kind: e.kind,
+        state: e.kind === "state" ? e.state : undefined,
+        voids: e.kind === "void" ? e.voids : undefined,
+        deviceId: "pc",
+        gen: 0,
+        seq: deps.store.nextSeq("pc", 0),
+        deviceEpoch: e.kind === "state" ? e.at : t,
+        receivedAt: t,
+        effectiveAt: e.kind === "state" ? e.at : t,
+        source: "web",
+        flags: ["manual"],
+      };
+      deps.store.insert(ev);
+      deps.live.publish({ type: "presence", eventId: ev.id, at: ev.effectiveAt });
+      return c.json(ev);
     })
     .post("/sync", (c) => {
       deps.requestSync?.();

@@ -109,3 +109,41 @@ describe("presence", () => {
     expect(text).toContain("2026-10-22,2026-10-22T09:00:00+09:00,2026-10-22T18:00:00+09:00,540,0");
   });
 });
+
+describe("manual edits", () => {
+  const post = (body: unknown) =>
+    app.request("/api/presence/events", {
+      method: "POST",
+      headers: { ...HOST, "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  const today = async () => {
+    const res = await app.request("/api/presence?from=2026-10-22&to=2026-10-22", { headers: HOST });
+    return ((await res.json()) as PresenceRange).days[0];
+  };
+
+  it("adds a forgotten checkout", async () => {
+    store.insert(ev(1, 9, "in"));
+    const at = dayStart("2026-10-22", TZ) + 18 * 3600;
+    expect((await post({ kind: "state", state: "out", at })).status).toBe(200);
+    const d = await today();
+    expect(d?.summary.presenceSec).toBe(9 * 3600);
+    expect(d?.segments[0]?.manual).toBe(true);
+  });
+
+  it("deletes an interval with voids", async () => {
+    store.insert(ev(1, 9, "in"));
+    store.insert(ev(2, 10, "out"));
+    const seg = (await today())?.segments[0];
+    await post({ kind: "void", voids: seg?.startEventId });
+    await post({ kind: "void", voids: seg?.endEventId });
+    expect((await today())?.segments).toHaveLength(0);
+  });
+
+  it("rejects bad edits", async () => {
+    expect((await post({ kind: "state", state: "in", at: 1000 })).status).toBe(400);
+    expect((await post({ kind: "state", state: "in", at: NOW + 3600 })).status).toBe(400);
+    expect((await post({ kind: "void", voids: "01HZZZZZZZZZZZZZZZZZZZZZZZ" })).status).toBe(404);
+    expect((await post({ kind: "delete", id: "x" })).status).toBe(400);
+  });
+});

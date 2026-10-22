@@ -1,6 +1,6 @@
 // DB の読み書き。SQL は Drizzle 経由だけにする
 import type { PresenceEvent } from "@labterm/core";
-import { and, asc, desc, eq, gte, lt, lte } from "drizzle-orm";
+import { and, asc, desc, eq, gte, lt, lte, max } from "drizzle-orm";
 import { monotonicFactory } from "ulid";
 import type { Db } from "./db/index.ts";
 import { deviceSync, presenceEvents } from "./db/schema.ts";
@@ -48,6 +48,20 @@ export class Store {
       .onConflictDoNothing()
       .run();
     return res.changes > 0;
+  }
+
+  getById(id: string): PresenceEvent | undefined {
+    const r = this.db.select().from(presenceEvents).where(eq(presenceEvents.id, id)).get();
+    return r ? toEvent(r) : undefined;
+  }
+
+  nextSeq(deviceId: string, gen: number): number {
+    const r = this.db
+      .select({ m: max(presenceEvents.seq) })
+      .from(presenceEvents)
+      .where(and(eq(presenceEvents.deviceId, deviceId), eq(presenceEvents.gen, gen)))
+      .get();
+    return (r?.m ?? 0) + 1;
   }
 
   findBySeq(deviceId: string, gen: number, seq: number): PresenceEvent | undefined {
