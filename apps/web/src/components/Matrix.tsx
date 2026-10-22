@@ -65,7 +65,7 @@ export function Matrix({
           hours,
           now,
           tz,
-          focus: d.focus,
+          focus: d.focus ?? [],
         }),
       })),
     [days, hours, resolution, now, tz],

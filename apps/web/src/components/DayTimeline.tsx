@@ -63,7 +63,7 @@ export function DayTimeline({
           );
         })}
         {/* 研究していた時間は在室の線の上に濃い色で重ねる */}
-        {day.focus.map((f) => (
+        {(day.focus ?? []).map((f) => (
           <div
             key={`${f.start}-f`}
             className="absolute top-[4px] h-[7px] rounded-full bg-presence-deep"
