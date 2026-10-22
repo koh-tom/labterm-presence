@@ -1,6 +1,6 @@
-import type { PresenceRange, Status } from "@labterm/core";
+import type { PresenceRange, Stats, Status } from "@labterm/core";
 import { useQuery } from "@tanstack/react-query";
-import { demoRange, demoStatus } from "./demo.ts";
+import { demoRange, demoStats, demoStatus } from "./demo.ts";
 import type { Range } from "./range.ts";
 
 export const DEMO = new URLSearchParams(location.search).has("demo");
@@ -20,6 +20,16 @@ export function usePresence(r: Range) {
         : get<PresenceRange>(`/api/presence?from=${r.from}&to=${r.to}`),
     placeholderData: (prev) => prev,
     refetchInterval: 60_000,
+  });
+}
+
+export function useStats(r: Range, enabled: boolean) {
+  return useQuery({
+    queryKey: ["stats", r.from, r.to],
+    queryFn: () =>
+      DEMO ? demoStats(r.from, r.to) : get<Stats>(`/api/stats?from=${r.from}&to=${r.to}`),
+    placeholderData: (prev) => prev,
+    enabled,
   });
 }
 

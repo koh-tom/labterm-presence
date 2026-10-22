@@ -46,6 +46,7 @@ export function RangeBar({
   onShift,
   onCustom,
   onResolution,
+  showResolution = true,
 }: {
   range: Range;
   resolution: number;
@@ -53,6 +54,7 @@ export function RangeBar({
   onShift: (dir: -1 | 1) => void;
   onCustom: (from: string, to: string) => void;
   onResolution: (r: number) => void;
+  showResolution?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [from, setFrom] = useState(range.from);
@@ -132,14 +134,16 @@ export function RangeBar({
             </Popover.Content>
           </Popover.Portal>
         </Popover.Root>
-        <Seg
-          value={resolution}
-          options={[
-            { id: 30, label: "30分" },
-            { id: 15, label: "15分" },
-          ]}
-          onChange={onResolution}
-        />
+        {showResolution && (
+          <Seg
+            value={resolution}
+            options={[
+              { id: 30, label: "30分" },
+              { id: 15, label: "15分" },
+            ]}
+            onChange={onResolution}
+          />
+        )}
         <ExportMenu range={range} />
       </div>
     </div>

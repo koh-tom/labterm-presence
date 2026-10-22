@@ -1,15 +1,18 @@
 import type { Status } from "@labterm/core";
 import clsx from "clsx";
+import type { ReactNode } from "react";
 import { clock } from "../lib/format.ts";
 
 export function StatusLine({
   status,
   tz,
   onSync,
+  nav,
 }: {
   status?: Status;
   tz: string;
   onSync?: () => void;
+  nav?: ReactNode;
 }) {
   if (!status) return <div className="h-6" />;
   const { presence, device, sync } = status;
@@ -45,6 +48,7 @@ export function StatusLine({
       </div>
 
       <div className="flex items-center gap-4 text-xs text-sub">
+        {nav}
         {sync.state === "required" && (
           <button
             type="button"

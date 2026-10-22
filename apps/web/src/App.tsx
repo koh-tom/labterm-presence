@@ -4,8 +4,9 @@ import { DayTimeline } from "./components/DayTimeline.tsx";
 import { Matrix } from "./components/Matrix.tsx";
 import { RangeBar } from "./components/RangeBar.tsx";
 import { Stats } from "./components/Stats.tsx";
+import { StatsView } from "./components/StatsView.tsx";
 import { StatusLine } from "./components/StatusLine.tsx";
-import { requestSync, usePresence, useStatus } from "./lib/api.ts";
+import { requestSync, usePresence, useStats, useStatus } from "./lib/api.ts";
 import { hm } from "./lib/format.ts";
 import { useLive } from "./lib/live.ts";
 import { presetRange, type Range, readUrl, shiftRange, writeUrl } from "./lib/range.ts";
@@ -21,6 +22,10 @@ function previousRange(r: Range, today: string): Range {
   return { ...prev, to: to < prev.to ? to : prev.to };
 }
 
+type View = "grid" | "stats";
+const readView = (): View =>
+  new URLSearchParams(location.search).get("view") === "stats" ? "stats" : "grid";
+
 function loadResolution(): number {
   try {
     return localStorage.getItem("resolution") === "15" ? 15 : 30;
@@ -32,7 +37,16 @@ function loadResolution(): number {
 export function App() {
   const [range, setRangeState] = useState<Range>(() => readUrl(new Date()));
   const [resolution, setResolutionState] = useState(loadResolution);
+  const [view, setViewState] = useState<View>(readView);
+  const setView = (v: View) => {
+    setViewState(v);
+    const q = new URLSearchParams(location.search);
+    if (v === "stats") q.set("view", "stats");
+    else q.delete("view");
+    history.replaceState(null, "", `?${q}`);
+  };
   const presence = usePresence(range);
+  const stats = useStats(range, view === "stats");
   const prev = usePresence(previousRange(range, dateOf(Math.floor(Date.now() / 1000), TZ)));
   const status = useStatus();
   const flashAt = useLive();
@@ -95,11 +109,38 @@ export function App() {
 
   return (
     <main className="mx-auto max-w-[1240px] px-6 py-8 sm:px-10 sm:py-10">
-      <StatusLine status={status.data} tz={TZ} onSync={() => void requestSync()} />
+      <StatusLine
+        status={status.data}
+        tz={TZ}
+        onSync={() => void requestSync()}
+        nav={
+          <nav className="flex gap-3 text-xs max-sm:hidden">
+            {(
+              [
+                ["grid", "記録"],
+                ["stats", "統計"],
+              ] as const
+            ).map(([v, label]) => (
+              <button
+                key={v}
+                type="button"
+                aria-pressed={view === v}
+                onClick={() => setView(v)}
+                className={view === v ? "font-medium text-fg" : "text-sub hover:text-fg"}
+              >
+                {label}
+              </button>
+            ))}
+            <span className="text-line">|</span>
+          </nav>
+        }
+      />
 
-      <div className="mt-10">
-        <Stats data={data} prev={prev.data} inLab={inLab} />
-      </div>
+      {view === "grid" && (
+        <div className="mt-10">
+          <Stats data={data} prev={prev.data} inLab={inLab} />
+        </div>
+      )}
 
       <div className="mt-12 max-sm:hidden">
         <RangeBar
@@ -109,10 +150,19 @@ export function App() {
           onShift={(dir) => setRange(shiftRange(range, dir, TZ))}
           onCustom={(from, to) => setRange({ preset: "custom", from, to })}
           onResolution={setResolution}
+          showResolution={view === "grid"}
         />
       </div>
 
-      <div className="mt-5 max-h-[62vh] overflow-y-auto max-sm:hidden">
+      {view === "stats" && (
+        <div className="mt-10 max-sm:hidden">
+          <StatsView stats={stats.data} />
+        </div>
+      )}
+
+      <div
+        className={`mt-5 max-h-[62vh] overflow-y-auto max-sm:hidden ${view === "stats" ? "hidden" : ""}`}
+      >
         {data && (
           <Matrix
             days={data.days}
@@ -128,7 +178,7 @@ export function App() {
         )}
       </div>
 
-      <div className="mt-10 max-sm:hidden">
+      <div className={`mt-10 max-sm:hidden ${view === "stats" ? "hidden" : ""}`}>
         {data && <DayTimeline day={day} hours={data.hours} now={now} tz={TZ} />}
       </div>
     </main>

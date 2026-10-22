@@ -43,3 +43,13 @@ test("rows stay aligned for any hour range", async ({ page }) => {
     expect(new Set(xs).size).toBe(1);
   }
 });
+
+test("shows the stats tab", async ({ page }) => {
+  await page.goto(URL);
+  await page.getByRole("button", { name: "統計" }).click();
+  await expect(page.getByText("前の期間と比べる")).toBeVisible();
+  await expect(page.getByText("いつもの在室 (曜日×時間)")).toBeVisible();
+  await expect(page).toHaveURL(/view=stats/);
+  await page.getByRole("button", { name: "記録" }).click();
+  await expect(page.getByRole("rowheader")).toHaveCount(31);
+});

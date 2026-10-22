@@ -1,6 +1,7 @@
 // daemon 無しで画面を確認するためのデモデータ (?demo)
 import {
   buildRange,
+  buildStats,
   currentState,
   dateOf,
   dayStart,
@@ -94,6 +95,19 @@ export function demoRange(from: string, to: string): PresenceRange {
     now,
     TZ,
     focusCache.filter((f) => f.end <= now),
+  );
+}
+
+export function demoStats(from: string, to: string) {
+  const now = Math.floor(Date.now() / 1000);
+  const ev = events(now);
+  return buildStats(
+    ev,
+    focusCache.filter((f) => f.end <= now),
+    from,
+    to,
+    now,
+    TZ,
   );
 }
 
