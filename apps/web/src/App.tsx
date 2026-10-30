@@ -4,6 +4,7 @@ import { DayTimeline } from "./components/DayTimeline.tsx";
 import { FullscreenButton, toggleFullscreen } from "./components/FullscreenButton.tsx";
 import { Matrix } from "./components/Matrix.tsx";
 import { RangeBar } from "./components/RangeBar.tsx";
+import { StateHero } from "./components/StateHero.tsx";
 import { Stats } from "./components/Stats.tsx";
 import { StatsView } from "./components/StatsView.tsx";
 import { StatusLine } from "./components/StatusLine.tsx";
@@ -110,10 +111,13 @@ export function App() {
   }, [range, data, selected, setRange, today]);
 
   const day = data?.days.find((d) => d.date === selected) ?? data?.days.at(-1);
-  const inLab = status.data?.presence.state === "in";
+  // 記録の画面は画面の高さぴったりにして、マス目の行の高さで調整する
+  const fit = view === "grid";
 
   return (
-    <main className="mx-auto max-w-[1240px] px-6 py-8 sm:px-10 sm:py-10">
+    <main
+      className={`mx-auto flex max-w-[1240px] flex-col px-6 py-6 sm:px-10 sm:py-8 ${fit ? "sm:h-dvh" : ""}`}
+    >
       <StatusLine
         status={status.data}
         tz={TZ}
@@ -142,13 +146,12 @@ export function App() {
         }
       />
 
-      {view === "grid" && (
-        <div className="mt-10">
-          <Stats data={data} prev={prev.data} inLab={inLab} />
-        </div>
-      )}
+      <div className="mt-8 grid shrink-0 grid-cols-2 gap-y-6 sm:grid-cols-5">
+        <StateHero status={status.data} tz={TZ} />
+        {view === "grid" && <Stats data={data} prev={prev.data} />}
+      </div>
 
-      <div className="mt-12 max-sm:hidden">
+      <div className="mt-8 shrink-0 max-sm:hidden">
         <RangeBar
           range={range}
           resolution={resolution}
@@ -166,9 +169,7 @@ export function App() {
         </div>
       )}
 
-      <div
-        className={`mt-5 max-h-[62vh] overflow-y-auto max-sm:hidden ${view === "stats" ? "hidden" : ""}`}
-      >
+      <div className={`mt-4 min-h-0 flex-1 max-sm:hidden ${view === "stats" ? "hidden" : ""}`}>
         {data && (
           <Matrix
             days={data.days}
@@ -184,7 +185,7 @@ export function App() {
         )}
       </div>
 
-      <div className={`mt-10 max-sm:hidden ${view === "stats" ? "hidden" : ""}`}>
+      <div className={`mt-6 shrink-0 max-sm:hidden ${view === "stats" ? "hidden" : ""}`}>
         {data && <DayTimeline day={day} hours={data.hours} now={now} tz={TZ} />}
       </div>
     </main>

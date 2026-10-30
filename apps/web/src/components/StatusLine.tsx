@@ -14,38 +14,20 @@ export function StatusLine({
   onSync?: () => void;
   nav?: ReactNode;
 }) {
+  const todayLabel = status
+    ? new Intl.DateTimeFormat("ja-JP", {
+        timeZone: tz,
+        month: "numeric",
+        day: "numeric",
+        weekday: "short",
+      }).format(new Date(status.now * 1000))
+    : "";
   if (!status) return <div className="h-6" />;
-  const { presence, device, sync } = status;
-
-  const text =
-    presence.state === "in"
-      ? "在室"
-      : presence.state === "away"
-        ? "外出"
-        : presence.since
-          ? "退室"
-          : "不在";
-  const time =
-    presence.since && presence.state !== "out"
-      ? `${clock(presence.since, tz)}〜`
-      : presence.since
-        ? clock(presence.since, tz)
-        : "";
+  const { device, sync } = status;
 
   return (
     <div className="flex items-center justify-between text-sm">
-      <div className="fade flex items-center gap-2.5">
-        <span
-          className={clsx(
-            "size-2.5 rounded-full",
-            presence.state === "in" && "bg-presence",
-            presence.state === "away" && "bg-presence-soft ring-1 ring-presence ring-inset",
-            presence.state === "out" && "bg-cell ring-1 ring-faint ring-inset",
-          )}
-        />
-        <span className="font-medium">{text}</span>
-        <span className="num text-sub">{time}</span>
-      </div>
+      <div className="num text-xs text-faint">{todayLabel}</div>
 
       <div className="flex items-center gap-4 text-xs text-sub">
         {nav}
