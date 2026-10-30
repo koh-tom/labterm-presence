@@ -183,8 +183,12 @@ export function toCells(date: string, segs: Segment[], opt: CellOptions): Cell[]
       if (b > a) focused += b - a;
     }
 
+    // 在室と外出だけで埋まっているマス (途中で外出した / 戻ってきた) は長い方にする。
+    // 研究室に来た・帰ったマス (一部が不在) は切り捨て
+    const full = step * 0.98;
     let kind: Cell["kind"] = "empty";
-    if (covered >= step * 0.98) kind = "in";
+    if (covered >= full) kind = "in";
+    else if (covered + away >= full) kind = covered >= away ? "in" : "away";
     else if (covered > 0) kind = "partial";
     else if (away > 0) kind = "away";
     else if (cs >= opt.now) kind = "future";

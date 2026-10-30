@@ -217,3 +217,37 @@ describe("focus", () => {
     expect(s.focusSec).toBe(3000);
   });
 });
+
+describe("cells around going out", () => {
+  // 10:10 に外出、10:50 に戻る、12:00 に退室
+  const segs = buildSegments([
+    ev("2026-10-23 9:00", "in"),
+    ev("2026-10-23 10:10", "away"),
+    ev("2026-10-23 10:50", "in"),
+    ev("2026-10-23 12:00", "out"),
+  ]);
+  const now = at("2026-10-23 20:00");
+  const day = splitByDay(segs, "2026-10-23", "2026-10-23", now).get("2026-10-23") ?? [];
+  const kinds = (resolutionMin: number) =>
+    toCells("2026-10-23", day, { resolutionMin, hours: [10, 11], now }).map((c) => c.kind);
+
+  it("fills the cells where you went out or came back (30 min)", () => {
+    // 10:00-10:30 は在室10分+外出20分 → 外出、10:30-11:00 は外出20分+在室10分 → 外出
+    expect(kinds(30)).toEqual(["away", "away"]);
+  });
+
+  it("uses the longer one (15 min)", () => {
+    // 10:00-15 在室10+外出5 → 在室 / 10:45-11:00 外出5+在室10 → 在室
+    expect(kinds(15)).toEqual(["in", "away", "away", "in"]);
+  });
+
+  it("still drops cells where you arrived or left", () => {
+    // 9:10 に来て 11:40 に帰った日: 9:00-9:30 と 11:30-12:00 は切り捨て
+    const s2 = buildSegments([ev("2026-10-24 9:10", "in"), ev("2026-10-24 11:40", "out")]);
+    const d2 = splitByDay(s2, "2026-10-24", "2026-10-24", now).get("2026-10-24") ?? [];
+    const k = toCells("2026-10-24", d2, { resolutionMin: 30, hours: [9, 12], now }).map(
+      (c) => c.kind,
+    );
+    expect(k).toEqual(["partial", "in", "in", "in", "in", "partial"]);
+  });
+});
