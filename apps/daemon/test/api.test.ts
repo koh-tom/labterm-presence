@@ -165,3 +165,26 @@ describe("routing", () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe("allowed hosts (tailscale serve)", () => {
+  it("accepts the configured https host only", async () => {
+    const ts = createApp({
+      store,
+      live: new Live(),
+      tz: TZ,
+      port: 8787,
+      now: () => NOW,
+      allowedHosts: ["koh-lila.tail1234.ts.net"],
+    });
+    const ok = await ts.request("/api/health", {
+      headers: { host: "koh-lila.tail1234.ts.net", origin: "https://koh-lila.tail1234.ts.net" },
+    });
+    expect(ok.status).toBe(200);
+    const other = await ts.request("/api/health", { headers: { host: "evil.ts.net" } });
+    expect(other.status).toBe(421);
+    const http = await ts.request("/api/health", {
+      headers: { host: "koh-lila.tail1234.ts.net", origin: "http://koh-lila.tail1234.ts.net" },
+    });
+    expect(http.status).toBe(403);
+  });
+});

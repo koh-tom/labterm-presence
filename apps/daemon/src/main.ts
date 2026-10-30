@@ -18,6 +18,11 @@ import { now, Store } from "./store.ts";
 const PORT = Number(process.env.LABTERM_PORT ?? 8787);
 const TZ = process.env.LABTERM_TZ ?? DEFAULT_TZ;
 const DEV = process.env.NODE_ENV !== "production";
+// 例: LABTERM_ALLOWED_HOSTS=koh-lila.tail1234.ts.net (tailscale serve で見る時)
+const ALLOWED_HOSTS = (process.env.LABTERM_ALLOWED_HOSTS ?? "")
+  .split(",")
+  .map((h) => h.trim().toLowerCase())
+  .filter((h) => /^[a-z0-9.-]+(:\d+)?$/.test(h));
 const WEB_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "web", "dist");
 
 const log = pino({
@@ -46,6 +51,7 @@ const app = createApp({
   tz: TZ,
   port: PORT,
   dev: DEV,
+  allowedHosts: ALLOWED_HOSTS,
   webDir: WEB_DIR,
   requestSync: () => device.requestSync(),
 });

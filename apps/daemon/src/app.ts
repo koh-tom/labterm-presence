@@ -25,6 +25,8 @@ export type Deps = {
   tz: string;
   port: number;
   dev?: boolean; // Vite (5173) からのアクセスも許す
+  // tailscale serve などの HTTPS 経由で見る時のホスト名 (例 koh-lila.tail1234.ts.net)
+  allowedHosts?: string[];
   webDir?: string;
   requestSync?: () => void;
   now?: () => number;
@@ -53,6 +55,10 @@ function guard(deps: Deps) {
   const origins = new Set([...hosts].map((h) => `http://${h}`));
   if (deps.dev) {
     for (const h of ["127.0.0.1:5173", "localhost:5173"]) origins.add(`http://${h}`);
+  }
+  for (const h of deps.allowedHosts ?? []) {
+    hosts.add(h);
+    origins.add(`https://${h}`);
   }
   return async (c: import("hono").Context, next: () => Promise<void>) => {
     const host = c.req.header("host");

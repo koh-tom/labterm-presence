@@ -73,6 +73,7 @@ Description=labterm presence daemon
 [Service]
 ExecStart=${process.execPath} ${main}
 Environment=NODE_ENV=production
+EnvironmentFile=-%h/.config/labterm/env
 Restart=on-failure
 RestartSec=3
 

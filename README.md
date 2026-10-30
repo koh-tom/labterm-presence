@@ -47,6 +47,15 @@ systemctl --user daemon-reload
 systemctl --user enable --now labterm-presence
 ```
 
+Tailscale の自分の端末から見る場合 (tailnet の外には出ない):
+
+```sh
+mkdir -p ~/.config/labterm
+echo "LABTERM_ALLOWED_HOSTS=$(tailscale status --json | jq -r .Self.DNSName | sed 's/\.$//')" > ~/.config/labterm/env
+systemctl --user restart labterm-presence
+tailscale serve --bg 8787
+```
+
 シリアルポートを読むには、ユーザーが `uucp` (Arch) か `dialout` (Debian 系) グループに入っている必要がある。
 
 ## labterm の他のツールと使う
