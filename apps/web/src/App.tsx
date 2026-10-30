@@ -1,6 +1,7 @@
 import { dateOf, datesBetween, nextDate } from "@labterm/core";
 import { useCallback, useEffect, useState } from "react";
 import { DayTimeline } from "./components/DayTimeline.tsx";
+import { FullscreenButton, toggleFullscreen } from "./components/FullscreenButton.tsx";
 import { Matrix } from "./components/Matrix.tsx";
 import { RangeBar } from "./components/RangeBar.tsx";
 import { Stats } from "./components/Stats.tsx";
@@ -83,6 +84,10 @@ export function App() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement) return;
+      if (e.key === "f" && !e.ctrlKey && !e.metaKey) {
+        toggleFullscreen();
+        return;
+      }
       if (e.key === "t" && !e.ctrlKey && !e.metaKey) {
         const p = range.preset === "custom" ? "month" : range.preset;
         setRange(presetRange(p, new Date()));
@@ -114,7 +119,8 @@ export function App() {
         tz={TZ}
         onSync={() => void requestSync()}
         nav={
-          <nav className="flex gap-3 text-xs max-sm:hidden">
+          <nav className="flex items-center gap-3 text-xs max-sm:hidden">
+            <FullscreenButton />
             {(
               [
                 ["grid", "記録"],
