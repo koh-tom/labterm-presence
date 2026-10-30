@@ -128,8 +128,8 @@ export function Matrix({
                 tabIndex={-1}
                 onClick={() => onSelect(date)}
                 onKeyDown={undefined}
-                className="grid min-h-[18px] max-h-28 flex-1 items-stretch"
-                style={template}
+                className="grid min-h-[16px] max-h-8 items-stretch"
+                style={{ ...template, flex: "1 1 2rem" }}
               >
                 <button
                   type="button"

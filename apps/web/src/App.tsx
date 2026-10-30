@@ -169,7 +169,9 @@ export function App() {
         </div>
       )}
 
-      <div className={`mt-4 min-h-0 flex-1 max-sm:hidden ${view === "stats" ? "hidden" : ""}`}>
+      <div
+        className={`mt-4 flex min-h-0 shrink flex-col max-sm:hidden ${view === "stats" ? "hidden" : ""}`}
+      >
         {data && (
           <Matrix
             days={data.days}
@@ -185,7 +187,9 @@ export function App() {
         )}
       </div>
 
-      <div className={`mt-6 shrink-0 max-sm:hidden ${view === "stats" ? "hidden" : ""}`}>
+      <div
+        className={`mt-4 min-h-[170px] flex-1 max-sm:hidden ${view === "stats" ? "hidden" : ""}`}
+      >
         {data && <DayTimeline day={day} hours={data.hours} now={now} tz={TZ} />}
       </div>
     </main>
