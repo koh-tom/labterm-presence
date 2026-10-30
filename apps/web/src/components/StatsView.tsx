@@ -60,13 +60,13 @@ function Compare({ cur, prev }: { cur: PeriodStats; prev: PeriodStats }) {
       d: delta(pct(cur), pct(prev), (v) => `${v}%`),
     },
     {
-      label: "来た時間",
+      label: "入室",
       a: tod(cur.avgArrival),
       b: tod(prev.avgArrival),
       d: delta(cur.avgArrival, prev.avgArrival, hm),
     },
     {
-      label: "帰った時間",
+      label: "退室",
       a: tod(cur.avgDeparture),
       b: tod(prev.avgDeparture),
       d: delta(cur.avgDeparture, prev.avgDeparture, hm),
@@ -238,7 +238,7 @@ export function StatsView({ stats }: { stats?: Stats }) {
         <Section title="前の期間と比べる">
           <Compare cur={stats.current} prev={stats.previous} />
         </Section>
-        <Section title="曜日ごとの平均 (来た時間 – 帰った時間)">
+        <Section title="曜日ごとの平均 (入室 – 退室)">
           <Weekdays stats={stats} />
         </Section>
       </div>

@@ -34,8 +34,8 @@ export function DayTimeline({
   for (let h = hours[0]; h <= hours[1]; h += 2) ticks.push(h);
 
   const facts = [
-    s.firstArrival !== null && { label: "来た", value: clock(s.firstArrival, tz) },
-    s.lastDeparture !== null && !isToday && { label: "帰った", value: clock(s.lastDeparture, tz) },
+    s.firstArrival !== null && { label: "入室", value: clock(s.firstArrival, tz) },
+    s.lastDeparture !== null && !isToday && { label: "退室", value: clock(s.lastDeparture, tz) },
     s.awaySec >= 60 && { label: "外出", value: hm(s.awaySec) },
     s.focusSec >= 60 && { label: "研究", value: hm(s.focusSec) },
   ].filter(Boolean) as { label: string; value: string }[];
