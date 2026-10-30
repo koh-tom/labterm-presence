@@ -12,7 +12,8 @@ import { openDb } from "./db/index.ts";
 import { findPort, SerialLink } from "./device/link.ts";
 import { DeviceService } from "./device/service.ts";
 import { Live } from "./live.ts";
-import { BACKUP_DIR, CONTROL_SOCKET, DB_PATH, EXPORT_DIR } from "./paths.ts";
+import { BACKUP_DIR, CONTROL_SOCKET, DB_PATH, EXPORT_DIR, SLACK_TOKEN_FILE } from "./paths.ts";
+import { readToken, SlackStatus } from "./slack.ts";
 import { now, Store } from "./store.ts";
 
 const PORT = Number(process.env.LABTERM_PORT ?? 8787);
@@ -44,6 +45,14 @@ const device = new DeviceService(
   log,
 );
 device.start();
+
+// Slack のステータス (トークンがある時だけ)
+const slackToken = readToken(SLACK_TOKEN_FILE, log);
+const slack = slackToken ? new SlackStatus(slackToken, log) : null;
+if (slack) {
+  live.onPresenceState((s) => slack.set(s));
+  log.info("slack status enabled");
+}
 
 const app = createApp({
   store,
@@ -86,6 +95,7 @@ const stopBackups = scheduleBackups(
 async function shutdown() {
   log.info("shutting down");
   stopBackups();
+  slack?.stop();
   control.close();
   server.close();
   await device.stop();

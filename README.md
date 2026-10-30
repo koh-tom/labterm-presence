@@ -9,6 +9,7 @@
 - 月・3か月・任意の期間を、30分 / 15分のマス目で表示。研究タイマーで研究していた時間は濃い緑
 - 統計タブ: 前の期間との比較、曜日×時間の「いつもの在室」、曜日ごとの来た / 帰った時間、週ごと・月ごとの合計
 - タブの名前に状態と今日の時間 (`● 6:34 在室`)。`t` で今日に戻る、`f` か右上のボタンで全画面
+- Slack のステータスに在室状態を出せる (在室 🏢 研究室 / 外出 🚶 外出中 / 退室 🏠 不在)
 - 毎日バックアップ、毎月 CSV を自動で書き出す
 - 127.0.0.1 だけで動く。クラウドは使わない
 
@@ -55,6 +56,32 @@ echo "LABTERM_ALLOWED_HOSTS=$(tailscale status --json | jq -r .Self.DNSName | se
 systemctl --user restart labterm-presence
 tailscale serve --bg 8787
 ```
+
+### Slack のステータス
+
+1. https://api.slack.com/apps で「Create New App」→「From a manifest」でワークスペースを選び、次を貼る
+
+   ```json
+   {
+     "display_information": { "name": "labterm presence" },
+     "oauth_config": {
+       "scopes": { "user": ["users.profile:read", "users.profile:write", "users:write"] }
+     }
+   }
+   ```
+
+2. 「Install to Workspace」して、OAuth & Permissions の **User OAuth Token** (`xoxp-` で始まる) をコピー
+3. daemon を動かしている PC で保存して再起動 (トークンは画面にもログにも出さない)
+
+   ```sh
+   mkdir -p ~/.config/labterm
+   install -m 600 /dev/null ~/.config/labterm/slack-token
+   read -rs TOKEN && printf '%s' "$TOKEN" > ~/.config/labterm/slack-token && unset TOKEN
+   systemctl --user restart labterm-presence
+   ```
+
+状態が変わってから6秒後に送る (取消で戻った時は送らない)。手で設定したステータス (会議中など) は上書きしない。
+退室の時はオンライン表示も「離席」にする。
 
 シリアルポートを読むには、ユーザーが `uucp` (Arch) か `dialout` (Debian 系) グループに入っている必要がある。
 
