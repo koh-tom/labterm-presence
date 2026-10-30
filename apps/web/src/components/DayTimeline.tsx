@@ -44,9 +44,9 @@ export function DayTimeline({
     <section className="flex h-full flex-col pt-4">
       <div className="flex items-end gap-6">
         <div>
-          <div className="text-sm text-sub">
+          <h2 className="text-sm font-normal text-sub">
             <span className="num">{md(day.date)}</span> ({weekday(day.date)})
-          </div>
+          </h2>
           <div className="num mt-1 text-[40px] leading-none font-extralight tracking-tight">
             {hm(s.presenceSec)}
           </div>
