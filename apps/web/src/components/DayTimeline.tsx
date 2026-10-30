@@ -70,13 +70,13 @@ export function DayTimeline({
         </button>
       </div>
 
-      <div className="relative mt-5 flex max-h-[220px] min-h-[92px] flex-1 flex-col">
+      <div className="relative mt-8">
         {/* 区間の始まりと終わりの時刻 */}
-        <div className="relative h-5 shrink-0">
+        <div className="relative h-5">
           {ins.map((seg) => (
             <span
               key={`${seg.start}-l`}
-              className="num absolute bottom-1 -translate-x-1/2 text-xs text-sub"
+              className="num absolute bottom-1.5 -translate-x-1/2 text-xs text-sub"
               style={{ left: pos(seg.start) }}
             >
               {clock(seg.start, tz)}
@@ -87,7 +87,7 @@ export function DayTimeline({
               seg.end !== null && (
                 <span
                   key={`${seg.start}-r`}
-                  className="num absolute bottom-1 -translate-x-1/2 text-xs text-faint"
+                  className="num absolute bottom-1.5 -translate-x-1/2 text-xs text-faint"
                   style={{ left: pos(seg.end) }}
                 >
                   {clock(seg.end, tz)}
@@ -96,14 +96,21 @@ export function DayTimeline({
           )}
         </div>
 
-        {/* 帯 */}
-        <div className="relative min-h-12 flex-1 overflow-hidden rounded-xl bg-cell">
+        {/* 線と棒: 在室は緑の棒、外出は点線 */}
+        <div className="relative h-4">
+          <div className="absolute inset-x-0 top-1/2 h-px bg-line" />
           {day.segments.map((seg) => {
             const end = seg.end ?? now;
-            return (
+            return seg.state === "in" ? (
               <div
-                key={`${seg.start}-${seg.state}`}
-                className={`absolute inset-y-0 rounded-lg ${seg.state === "in" ? "bg-presence" : "bg-presence-soft"}`}
+                key={`${seg.start}-in`}
+                className="absolute inset-y-0 rounded-full bg-presence"
+                style={{ left: pos(seg.start), width: width(seg.start, end) }}
+              />
+            ) : (
+              <div
+                key={`${seg.start}-away`}
+                className="absolute top-1/2 h-0 -translate-y-1/2 border-t-[3px] border-dotted border-presence/60"
                 style={{ left: pos(seg.start), width: width(seg.start, end) }}
               />
             );
@@ -114,22 +121,25 @@ export function DayTimeline({
               <span
                 key={`${seg.start}-m`}
                 title="手動で修正"
-                className="absolute top-1 size-1.5 -translate-x-1/2 rounded-full bg-bg/70"
-                style={{ left: `calc(${pos(seg.start)} + 6px)` }}
+                className="absolute -top-2 size-1 -translate-x-1/2 rounded-full bg-sub"
+                style={{ left: pos(seg.start) }}
               />
             ))}
+          {isToday && day.segments.some((seg) => seg.end === null) && (
+            <div
+              className="now-pulse absolute top-1/2 size-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-presence ring-4 ring-bg"
+              style={{ left: pos(now) }}
+            />
+          )}
+          {ins.length === 0 && (
+            <span className="absolute inset-0 flex items-center justify-center text-xs text-faint">
+              <span className="bg-bg px-2">記録なし</span>
+            </span>
+          )}
         </div>
 
-        {/* いま */}
-        {isToday && now > t0 && now < t0 + span && (
-          <div
-            className="now-pulse pointer-events-none absolute top-5 bottom-6 w-[2px] -translate-x-1/2 rounded-full bg-fg/70"
-            style={{ left: pos(now) }}
-          />
-        )}
-
         {/* 時刻の目盛り */}
-        <div className="relative mt-2 h-4 shrink-0">
+        <div className="relative mt-3 h-4">
           {ticks.map((h) => (
             <span
               key={h}
@@ -140,12 +150,6 @@ export function DayTimeline({
             </span>
           ))}
         </div>
-
-        {ins.length === 0 && (
-          <div className="absolute inset-x-0 top-5 bottom-6 flex items-center justify-center text-xs text-faint">
-            記録なし
-          </div>
-        )}
       </div>
 
       {editing && <DayEditor day={day} tz={tz} now={now} />}
