@@ -76,7 +76,7 @@ export class DeviceService {
       if (this.link !== link) return;
       this.link = null;
       this.hello = null;
-      this.live.devicePresence = null;
+      this.live.setDevicePresence(null);
       if (this.heartbeat) clearInterval(this.heartbeat);
       this.live.setDevice(Date.now() < this.pausedUntil ? "paused" : "disconnected");
       this.log.info("device disconnected");
@@ -199,7 +199,7 @@ export class DeviceService {
       const [st] = await link.request("state");
       if (st?.type !== "state") return;
       this.live.setDevice("connected");
-      this.live.devicePresence = { state: st.state, since: st.since || null };
+      this.live.setDevicePresence({ state: st.state, since: st.since || null });
       const stored = currentState(this.store.eventsUntil(now() + 60));
       const mismatch = stored.state !== st.state;
       if (mismatch && this.live.sync.state !== "required") this.live.setSync("required");

@@ -24,6 +24,18 @@ export class Live {
   sync: { state: SyncState; lastSyncAt: number | null } = { state: "ok", lastSyncAt: null };
   devicePresence: { state: PresenceState; since: number | null } | null = null;
 
+  // 端末の在室状態が変わったら知らせる (Slack 連携用。SSE には流さない)
+  setDevicePresence(p: { state: PresenceState; since: number | null } | null) {
+    const prev = this.devicePresence?.state;
+    this.devicePresence = p;
+    if (p && p.state !== prev) this.emitter.emit("presenceState", p.state);
+  }
+
+  onPresenceState(fn: (state: PresenceState) => void): () => void {
+    this.emitter.on("presenceState", fn);
+    return () => this.emitter.off("presenceState", fn);
+  }
+
   constructor() {
     this.emitter.setMaxListeners(50);
   }
