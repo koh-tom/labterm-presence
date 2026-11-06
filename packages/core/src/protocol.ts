@@ -41,7 +41,7 @@ const Event = z
     state: z.enum(["in", "away", "out"]).optional(),
     voids: u32.optional(),
     epoch,
-    source: z.enum(["button", "focus"]),
+    source: z.enum(["button", "focus", "card"]),
   })
   .refine((e) => (e.kind === "state" ? e.state !== undefined : e.voids !== undefined), {
     message: "state event needs state, void event needs voids",

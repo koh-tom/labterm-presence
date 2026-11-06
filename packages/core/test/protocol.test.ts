@@ -20,6 +20,11 @@ describe("parseLine", () => {
         '@labterm {"type":"event","gen":1,"seq":3,"kind":"void","voids":2,"epoch":1792651315,"source":"button"}',
       ),
     ).toMatchObject({ ok: true, msg: { kind: "void", voids: 2 } });
+    expect(
+      parseLine(
+        '@labterm {"type":"event","gen":1,"seq":4,"kind":"state","state":"in","epoch":1792651320,"source":"card"}',
+      ),
+    ).toMatchObject({ ok: true, msg: { source: "card" } });
     expect(parseLine('@labterm {"type":"end","re":3,"count":0}')).toMatchObject({ ok: true });
     expect(parseLine('@labterm {"type":"error","re":5,"code":"bad_args"}')).toMatchObject({
       ok: true,

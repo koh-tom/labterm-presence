@@ -1,5 +1,5 @@
 export type PresenceState = "in" | "away" | "out";
-export type EventSource = "button" | "focus" | "web";
+export type EventSource = "button" | "focus" | "card" | "web";
 
 // PC側に保存するイベント。区間や集計はすべてここから作り直せる
 export type PresenceEvent = {

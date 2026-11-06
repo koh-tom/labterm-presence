@@ -21,7 +21,7 @@ export const presenceEvents = sqliteTable(
     deviceEpoch: integer("device_epoch").notNull(),
     receivedAt: integer("received_at").notNull(),
     effectiveAt: integer("effective_at").notNull(),
-    source: text("source", { enum: ["button", "focus", "web"] }).notNull(),
+    source: text("source", { enum: ["button", "focus", "card", "web"] }).notNull(),
     flags: text("flags", { mode: "json" }).$type<string[]>().notNull().default([]),
     raw: text("raw"),
     createdAt: integer("created_at").notNull(),
