@@ -116,7 +116,7 @@ export function App() {
 
   return (
     <main
-      className={`mx-auto flex max-w-[1240px] flex-col px-6 py-6 sm:px-10 sm:py-8 ${fit ? "sm:h-dvh" : ""}`}
+      className={`mx-auto flex max-w-[1240px] flex-col px-6 py-6 sm:px-10 sm:py-8 ${fit ? "sm:h-[calc(100dvh/var(--zoom,1))]" : ""}`}
     >
       <StatusLine
         status={status.data}
