@@ -9,6 +9,7 @@ import { createApp } from "./app.ts";
 import { backupNow, exportLastMonth, prune, scheduleBackups } from "./backup.ts";
 import { startControl } from "./control.ts";
 import { openDb } from "./db/index.ts";
+import { DesktopLock } from "./desktop.ts";
 import { findPort, SerialLink } from "./device/link.ts";
 import { DeviceService } from "./device/service.ts";
 import { Live } from "./live.ts";
@@ -54,6 +55,14 @@ if (slack) {
   log.info("slack status enabled");
 }
 
+// 在室の時だけデスクトップを使えるようにする (LABTERM_KIOSK_VT=8 など)
+const kioskVt = Number(process.env.LABTERM_KIOSK_VT ?? 0);
+const desktop = kioskVt >= 1 && kioskVt <= 12 ? new DesktopLock(kioskVt, log) : null;
+if (desktop) {
+  live.onPresenceState((s) => desktop.set(s));
+  log.info({ kioskVt }, "desktop lock enabled");
+}
+
 const app = createApp({
   store,
   live,
@@ -96,6 +105,7 @@ async function shutdown() {
   log.info("shutting down");
   stopBackups();
   slack?.stop();
+  desktop?.stop();
   control.close();
   server.close();
   await device.stop();
