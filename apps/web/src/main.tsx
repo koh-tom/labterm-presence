@@ -7,6 +7,10 @@ import "./styles.css";
 
 const queryClient = new QueryClient();
 
+// 大きいモニターでつけっぱなしにする時用 (?zoom=2)。rem を大きくする
+const zoom = Number(new URLSearchParams(location.search).get("zoom"));
+if (zoom >= 0.5 && zoom <= 4) document.documentElement.style.fontSize = `${16 * zoom}px`;
+
 const root = document.getElementById("root");
 if (root) {
   createRoot(root).render(
